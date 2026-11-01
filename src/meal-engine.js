@@ -35,6 +35,18 @@ const PROTEINS = Object.freeze([
   {key:"kabeljauwfilet",label:"kabeljauwfilet",unit:"g",amount:250,kind:"fish"}
 ]);
 
+const STAPLE_DEALS = Object.freeze([
+  {key:"volkoren pasta",formats:["pasta"]},
+  {key:"zilvervliesrijst",formats:["wok","curry"]},
+  {key:"kikkererwten",formats:["oven","curry","bowl","salad"]},
+  {key:"kidneybonen",formats:["wrap"]},
+  {key:"volkoren wraps",formats:["wrap"]},
+  {key:"volkoren couscous",formats:["bowl","salad"]},
+  {key:"eieren",formats:["shakshuka"]},
+  {key:"linzen uit blik",formats:["soup"]},
+  {key:"tomatenblokjes",formats:["soup","shakshuka","curry"]},
+]);
+
 const FORMATS = Object.freeze([
   {
     id:"oven",label:"Ovenmaaltijd",emoji:"🥘",tone:"tone-orange",minutes:40,
@@ -166,7 +178,7 @@ function bestOffers(offers, retailer, today) {
     isActiveOffer({ ...o, promotion_status:o.status || o.promotion_status }, today)
   );
   const found = new Map();
-  for (const item of [...VEG, ...PROTEINS]) {
+  for (const item of [...VEG, ...PROTEINS, ...STAPLE_DEALS]) {
     const candidates = live.filter(o => matchesRecipeIngredient(o, item.key));
     if (!candidates.length) continue;
     candidates.sort((a,b) =>
@@ -237,6 +249,29 @@ function makeProteinDish(protein,veg,found) {
   };
 }
 
+function makeStapleDish(format,a,b,staple,found) {
+  const vegOffer=found.get(a.key),stapleOffer=found.get(staple.key);
+  return {
+    recipe:{
+      id:"actief-"+format.id+"-"+clean(a.key).replaceAll(" ","-")+"-"+clean(staple.key).replaceAll(" ","-"),
+      title:format.prefix+" "+humanJoin(a.label,b.label),
+      description:"Samengesteld met actuele korting op "+a.label+" én "+staple.key+".",
+      category:format.label,diet:format.diet,vegan:format.vegan,
+      minutes:format.minutes,emoji:format.emoji,tone:format.tone,servings:2,
+      ingredients:[[a.key,a.amount,a.unit],[b.key,b.amount,b.unit],...format.base.map(row=>[...row])],
+      steps:format.steps(a.label,b.label),allergens:format.allergens
+    },
+    matches:[
+      {ingredient:a.key,offer:vegOffer,major:true},
+      {ingredient:staple.key,offer:stapleOffer,major:true}
+    ],
+    main:2,
+    score:175+(Number(vegOffer.savings)||0)+(Number(stapleOffer.savings)||0),
+    method:format.id,
+    pair:[a.key,staple.key].sort().join("|")
+  };
+}
+
 /** 0..7 deterministic actual-offer dinners, with no unproven filler. */
 export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
   if (!RECIPE_RETAILERS.some(r=>r.code===retailer)) return [];
@@ -252,6 +287,20 @@ export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
         // Different colored peppers represent distinct recipes only if the
         // actual offers have different product identities.
         candidates.push(makePair(format,a,b,found));
+      }
+    }
+  }
+  // When only one relevant vegetable is discounted, a second genuine offer
+  // on a core ingredient (rice, pasta, beans, eggs etc.) can support a dish.
+  // The complementary vegetable stays explicitly on the normal-price list.
+  for(const format of FORMATS){
+    const allowed = VEG.filter(v=>ROLES[format.id].includes(v.key));
+    for(const a of allowed.filter(v=>found.has(v.key))){
+      const b=allowed.find(v=>v.key!==a.key && !found.has(v.key));
+      if(!b)continue;
+      for(const staple of STAPLE_DEALS.filter(x=>x.formats.includes(format.id) && found.has(x.key))){
+        if(found.get(a.key)?.id===found.get(staple.key)?.id)continue;
+        candidates.push(makeStapleDish(format,a,b,staple,found));
       }
     }
   }
