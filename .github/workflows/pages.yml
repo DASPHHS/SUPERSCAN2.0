@@ -43,6 +43,10 @@ jobs:
         run: python scripts/sync_sources.py
       - name: Import complete SpecialeDeals Weekdeals feed
         run: python scripts/import_specialedeals.py
+      - name: Refresh HelloFresh NL recipe metadata (registered API optional)
+        env:
+          HFRESH_API_TOKEN: ${{ secrets.HFRESH_API_TOKEN }}
+        run: python scripts/sync_hellofresh.py
       - name: Verify weekly recipe coverage per supermarket
         run: node scripts/report_weekly.mjs
       - name: Assemble Pages artifact
@@ -50,6 +54,7 @@ jobs:
           mkdir -p dist
           cp index.html styles.css manifest.webmanifest favicon.svg sw.js dist/
           cp -r src data dist/
+          python -c 'import json; x=json.load(open("dist/data/hellofresh.json")); assert x.get("recipes"), "No verified HelloFresh source links"'
           python -c 'import json; d=json.load(open("dist/data/deals.json")); assert d.get("offers"), "No current offers in deploy artifact"'
           test -s dist/data/deals.json
           test -s dist/data/prices.json
