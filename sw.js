@@ -1,5 +1,5 @@
 /* Offline application shell only; source data must never be served stale. */
-const VERSION = "superscan-v2-shell-5";
+const VERSION = "superscan-v2-shell-6";
 const FILES = ["./", "./index.html", "./styles.css", "./src/app.js", "./src/pricing.js", "./src/recipes.js", "./src/weekly.js", "./src/meal-engine.js", "./src/hellofresh.js", "./favicon.svg", "./manifest.webmanifest"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(VERSION).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
