@@ -4,13 +4,25 @@ Een responsive Nederlandse website om actuele aanbiedingen te ontdekken, product
 
 ## Functies
 
-- Actuele supermarktaanbiedingen met zoekveld, winkel- en kortingsfilters en geldigheidsdatum.
+- Actuele supermarktaanbiedingen van uitsluitend Albert Heijn, Lidl, Jumbo, Hoogvliet en Dirk, met zoekveld, winkel- en kortingsfilters en geldigheidsdatum.
 - Basisprijsvergelijking per product, verpakking en supermarkt.
 - Boodschappenlijst met afvinken, verwijderen, import/export als JSON en automatisch bewaren in de browser (localStorage, zonder account).
 - Vergelijking van complete mandjes; onvolledige matches worden uitsluitend als deelsom weergegeven. Geen prijsramingen verzinnen.
 - Een optimalisatie voor maximaal twee winkels, uitsluitend bij volledige productdekking.
-- 12 originele, redactioneel samengestelde avondrecepten met ingrediënten, stappen, dieetfilters, allergenenindicatie en schaalbare hoeveelheden. Voeg ingrediënten toe aan je lijst.
+- Een **niet-willekeurige, actiegestuurde weekplanner** met maximaal 7 recepten per gekozen keten. De 12 originele, redactioneel samengestelde basiskookrecepten fungeren uitsluitend als sjablonen; een gerecht verschijnt **alleen als een belangrijk ingrediënt werkelijk in de aanbieding is** bij de gekozen keten en de actie op dit moment loopt. Elk recept toont concreet gevonden actieproducten, prijzen en geldigheid, en kan naar de boodschappenlijst worden toegevoegd. Hele week aan lijst toevoegen combineert identieke ingrediënten.
 - Installatie als eenvoudige PWA en een offline app-shell; prijzen en aanbiedingen worden altijd online geladen.
+
+
+## Wekelijkse recepten op basis van acties (belangrijk)
+
+- **Vijf ketens:** Albert Heijn, Lidl, Jumbo, Hoogvliet, Dirk.
+- De website haalt iedere zes uur actuele aanbiedingen bij PrijsProfeet op. Voor receptrelevantie zoekt het script expliciet ook naar groenten, aardappelen, peulvruchten, eieren, pasta, vis en andere concrete ingrediënten. De data is een **selectie**, geen volledig assortiment.
+- De planner selecteert deterministisch uit de originele receptsjablonen. **Een belangrijk ingrediënt moet aantoonbaar in de aanbieding zijn** bij de geselecteerde keten. Recepten zonder passend actiebewijs worden volledig verborgen; er worden nooit dummy-acties of fictieve prijzen getoond.
+- Per recept is te zien **welk ingrediënt**, **welk concreet actieproduct**, **welke prijs** en **welke einddatum** van toepassing zijn. Niet alle ingrediënten zijn in de aanbieding; de app berekent daarom geen verzonnen totale receptprijs of besparing.
+- Maximaal zeven passende recepten per actieweek, gerangschikt op aantal actie-ingrediënten en feitelijke korting, zonder toevalsgenerator. Als er minder dan zeven bewezen gerechten zijn, worden ook minder getoond.
+- Kies je supermarkt en vul optioneel je **voorkeursvestiging** in. Dat veld wordt lokaal bewaard, maar de PrijsProfeet-API biedt **geen aantoonbare informatie op fysiek filiaalniveau**. De app toont daarom alleen landelijke ketenaanbiedingen en zegt expliciet dat filiaalbeschikbaarheid en lokale uitzonderingen niet zijn vastgesteld. Echte per-vestiging-prijzen vereisen afzonderlijke winkel- of filiaalgebonden databronnen.
+- De filtering gebeurt telkens opnieuw op de actuele dag in de tijdzone Europa/Amsterdam. Als acties tijdens de week verlopen, verdwijnt het bijbehorende bewijs. Bij geen passende acties toont de planner bewust geen generieke recepten.
+- Gezonde eetprincipes zijn leidend, maar de recepten en specifieke merken zijn niet klinisch of nutritioneel gecertificeerd. Lees allergenen en etiketten zelf.
 
 ## Gebruikte databronnen
 
