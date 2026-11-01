@@ -8,7 +8,7 @@
  * Does NOT imply that every ingredient is discounted, that the shown package
  * price equals a recipe portion, or that national chain prices are local.
  */
-import { matchesRecipeIngredient, RECIPE_RETAILERS } from "./weekly.js";
+import { matchesRecipeIngredient, RECIPE_RETAILERS, weekBounds } from "./weekly.js";
 import { clean, isActiveOffer, todayNL } from "./pricing.js";
 
 const VEG = Object.freeze([
@@ -208,11 +208,26 @@ export function isWholeIngredientOffer(offer, item) {
 }
 
 /** Produce true only for actual separate product identities. */
-function bestOffers(offers, retailer, today) {
+export function isOfferInPeriod(offer,period="now",today=todayNL()) {
+  if(!offer || !Number.isFinite(Number(offer.price)) || Number(offer.price)<=0)return false;
+  if(period==="now")return isActiveOffer({...offer,promotion_status:offer.status||offer.promotion_status},today);
+  if(period!=="next")return false;
+  const {start,end}=weekBounds(today);
+  const nextStart=new Date(start+"T12:00:00Z"),nextEnd=new Date(end+"T12:00:00Z");
+  nextStart.setUTCDate(nextStart.getUTCDate()+7);
+  nextEnd.setUTCDate(nextEnd.getUTCDate()+7);
+  const from=String(offer.valid_from||"").slice(0,10);
+  const to=String(offer.valid_until||"").slice(0,10);
+  if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to))return false;
+  const status=offer.status||offer.promotion_status;
+  if(["historical","shelf"].includes(status))return false;
+  return from<=nextEnd.toISOString().slice(0,10) && to>=nextStart.toISOString().slice(0,10);
+}
+function bestOffers(offers, retailer, today, period="now") {
   const live = (offers || []).filter(o =>
     o.retailer === retailer &&
     o.name && Number.isFinite(Number(o.price)) &&
-    isActiveOffer({ ...o, promotion_status:o.status || o.promotion_status }, today)
+    isOfferInPeriod(o,period,today)
   );
   const found = new Map();
   for (const item of [...VEG, ...PROTEINS, ...STAPLE_DEALS]) {
@@ -332,9 +347,9 @@ function makeSingleSourceDish(format,a,b,found,sourceKey) {
 }
 
 /** 0..7 deterministic actual-offer dinners, with no unproven filler. */
-export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
+export function buildActionMeals(offers, retailer, today=todayNL(), limit=7, period="now") {
   if (!RECIPE_RETAILERS.some(r=>r.code===retailer)) return [];
-  const found=bestOffers(offers,retailer,today);
+  const found=bestOffers(offers,retailer,today,period);
   const candidates=[];
   for (const format of FORMATS) {
     const available=VEG.filter(v=>v.roles.includes(format.id) &&
