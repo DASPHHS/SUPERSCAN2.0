@@ -18,6 +18,18 @@ SUPERSCAN opent nu met de recepten. De module **maakt complete gerechten vanuit 
 
 Het receptenalgoritme staat in [src/meal-engine.js](src/meal-engine.js); de gecontroleerde ingrediëntmatcher en winkels in [src/weekly.js](src/weekly.js). De 12 oudere oorspronkelijke recepten in [src/recipes.js](src/recipes.js) worden **niet meer willekeurig gepubliceerd** als aanbevelingen. Ze vormen alleen nog een interne referentieset voor kookprincipes en tests.
 
+## Vlees en kip in het actiegestuurde weekmenu
+
+De planner controleert nu **kipfilet, kipdijfilet, kipdrumsticks/kippenpoten, rundergehakt, biefstuk, runderreepjes, varkenshaas en varkensfiletlapjes**, naast zalm en kabeljauw. De bereiding wordt per vleessoort aangepast; kip moet aantoonbaar goed gaar zijn (advies in het recept: minimaal 75 °C kern). Filters op **Kip / Rundvlees / Varkensvlees / Vis** zijn in het weekmenu aanwezig.
+
+Vleesrecepten worden alleen getoond als er werkelijk een passende promotie voor een rauw vleesproduct is gevonden. Vegetarische alternatieven, maaltijdmixen en vleeswaren tellen niet mee. Het weekmenu reserveert voorrang voor bewezen aanbiedingen van gevogelte, rund- en varkensvlees en vis, zodat verse vleesacties niet volledig worden verdrongen door groenteacties.
+
+## Vollediger bronbestand via SpecialeDeals Weekdeals
+
+De bestaande [SpecialeDeals Weekdeals](https://dasphhs.github.io/specialedeals/weekdeals/) heeft een goede, breed gepagineerde PrijsProfeet-import met geldigheidsdata, eenheidsprijs, bundelvoorwaarden en klantkaartprijzen. SUPERSCAN kopieert niet de volledige website; het importeert **de openbare, vers gecontroleerde aanbiedingendata** uit de bestaande eigen GitHub-repository als primaire feed, beperkt tot de vijf gekozen ketens. Als de feed te oud is of mislukt, blijft de onafhankelijke PrijsProfeet-synchronisatie als terugvalbron beschikbaar. Het bijwerken vindt plaats tijdens de GitHub Pages-build, niet in het apparaat van de bezoeker.
+
+De knoppen **Deze week / Volgende week** werken alleen wanneer de bron voor die week werkelijke datums en producten heeft. Geraamde einddatums worden niet als bevestigd aangemerkt. De bestaande filters en de boodschappenlijst blijven beschikbaar. Ketenaanbiedingen zijn niet automatisch geverifieerd op filiaalniveau.
+
 ## Functies
 
 - Actuele supermarktaanbiedingen van uitsluitend Albert Heijn, Lidl, Jumbo, Hoogvliet en Dirk, met zoekveld, winkel- en kortingsfilters en geldigheidsdatum.
