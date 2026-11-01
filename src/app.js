@@ -1,4 +1,5 @@
-import { dealMatchedRecipes, RECIPE_RETAILERS, weekBounds } from "./weekly.js";
+import { RECIPE_RETAILERS, weekBounds } from "./weekly.js";
+import { buildActionMeals } from "./meal-engine.js";
 import { euro, clean, compareProduct, compareBasket, optimizeTwoStores, isActiveOffer, normalizeOffer, safeUrl, todayNL } from "./pricing.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -205,11 +206,11 @@ function renderRecipes(){
   $("#add-week-to-list").disabled=!list.length;
   const chain=weeklyStoreLabel();
   $("#weekly-status").textContent=state.offers.length
-    ? state.weekMenu.length+" actiegestuurde recepten voor "+chain+" · "+list.length+" na filters · actuele ketenacties"
+    ? state.weekMenu.length+" maaltijden samengesteld uit actuele acties bij "+chain+" · "+list.length+" na je filters"
     : "Nog geen actuele aanbiedingsdata geladen: er worden geen willekeurige recepten getoond.";
   if(!state.weekMenu.length){
     el.innerHTML=msg("Geen bewezen actierecepten voor "+chain,
-      "Er is nu geen recept met een geverifieerd actie-ingrediënt beschikbaar. Probeer een andere keten of controleer later opnieuw. We tonen bewust geen willekeurige recepten.");
+      "Er zijn nu te weinig afzonderlijke, bevestigde voedselacties om een complete maaltijd te maken. Probeer een andere supermarkt; we vullen nooit aan met willekeurige recepten.");
     return;
   }
   if(!list.length){
@@ -229,7 +230,7 @@ function renderRecipes(){
       '</span><span class="time-tag">◷ '+r.minutes+' min</span></div>'+
       '<div class="recipe-body"><div class="recipe-kicker">'+html(chain)+' · '+html(r.category)+'</div>'+
       '<h3>'+html(r.title)+'</h3><p>'+html(r.description)+'</p>'+
-      '<div class="weekly-match-count">'+entry.matches.length+' daadwerkelijk gevonden actie'+
+      '<div class="weekly-match-count">'+entry.matches.length+' gecontroleerde actie'+
       (entry.matches.length===1?"-ingrediënt":"-ingrediënten")+'</div>'+
       '<div class="weekly-deal-list">'+promo+extra+'</div>'+
       '<div class="recipe-footer"><span>2 personen · actie geldig volgens bron</span>'+
@@ -238,7 +239,7 @@ function renderRecipes(){
   }).join("");
 }
 function updateWeeklyMenu(){
-  state.weekMenu=dealMatchedRecipes(state.offers,state.recipeStore,todayNL(),7);
+  state.weekMenu=buildActionMeals(state.offers,state.recipeStore,todayNL(),7);
   renderRecipes();
 }
 function qtyText(q) {return new Intl.NumberFormat("nl-NL",{maximumFractionDigits:1}).format(q);}
@@ -325,15 +326,6 @@ async function loadData(){
   ]);
 }
 function setupEvents(){
-  $("#hero-search").addEventListener("submit",e=>{
-    e.preventDefault();const q=$("#hero-query").value.trim();if(!q)return;
-    $("#deals-search").value=q;state.dealQuery=q;renderDeals();
-    $("#compare-query").value=q;renderCompare(q);
-    $("#aanbiedingen").scrollIntoView({behavior:"smooth"});
-  });
-  document.querySelectorAll("[data-quick]").forEach(b=>b.addEventListener("click",()=>{
-    $("#hero-query").value=b.dataset.quick;$("#hero-search").requestSubmit();
-  }));
   $("#deals-search").addEventListener("input",e=>{state.dealQuery=e.target.value;renderDeals();});
   $("#store-filter").addEventListener("change",e=>{state.dealStore=e.target.value;renderDeals();});
   $("#deals-sort").addEventListener("change",e=>{state.dealSort=e.target.value;renderDeals();});
