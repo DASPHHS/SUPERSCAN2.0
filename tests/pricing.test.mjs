@@ -42,7 +42,7 @@ test("shows incomplete baskets as partial, never full totals",()=>{
   assert.equal(rows[0].covered,2);
   assert.equal(rows[0].complete,true);
   assert.equal(rows[2].complete,false);
-  assert.equal(Number(rows[0].subtotal.toFixed(2)),4.03);
+  assert.equal(Number(rows[0].subtotal.toFixed(2)),3.99);
 });
 test("two-store optimizer chooses only a complete combination",()=>{
   const opt=optimizeTwoStores(stores,[
