@@ -34,7 +34,7 @@
         <div class="hero-copy">
           <div class="eyebrow hero-eyebrow"><span class="pulse"></span> JOUW SLIMME BOODSCHAPPENASSISTENT</div>
           <h1>Meer besparen.<br><em>Beter eten.</em><br>Slimmer kiezen.</h1>
-          <p>Alle aanbiedingen op één plek. Vergelijk je complete boodschappenlijst en ontdek makkelijke, gezonde avondrecepten.</p>
+          <p>Alle aanbiedingen op één plek. Vergelijk je complete boodschappenlijst en bekijk gezonde weekrecepten die aantoonbaar bij de lopende acties passen.</p>
           <form id="hero-search" class="hero-search" role="search">
             <span class="search-icon" aria-hidden="true">⌕</span>
             <label class="sr-only" for="hero-query">Zoek producten of aanbiedingen</label>
@@ -57,7 +57,7 @@
         <div><span class="strip-symbol">%</span><strong>Alle deals</strong><small>Acties met geldigheidsdatum</small></div>
         <div><span class="strip-symbol">≋</span><strong>Vergelijk winkels</strong><small>Prijs &amp; dekking inzichtelijk</small></div>
         <div><span class="strip-symbol">▤</span><strong>Bewaar je lijst</strong><small>Ook na het sluiten van je browser</small></div>
-        <div><span class="strip-symbol">✳</span><strong>Gezond koken</strong><small>Maaltijden met veel groenten</small></div>
+        <div><span class="strip-symbol">✳</span><strong>Koken met acties</strong><small>Geen willekeurige recepten</small></div>
       </section>
 
       <section id="aanbiedingen" class="content-section">
@@ -91,19 +91,41 @@
 
       <section id="recepten" class="content-section recipes-section">
         <div class="section-header">
-          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> ELKE DAG LEKKER</div><h2>Wat eten we <span>vanavond?</span></h2><p>Zelf samengestelde avondrecepten met veel groenten, volkorenproducten en eiwitbronnen.</p></div>
-          <span class="outline-badge">Gebaseerd op Schijf van Vijf-principes</span>
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> WEEKMENU OP BASIS VAN ECHTE ACTIES</div><h2>Wat koken we <span>deze week?</span></h2><p>Geen willekeurige recepten: uitsluitend gerechten met een aantoonbaar actueel aanbieding-ingrediënt van jouw supermarkt.</p></div>
+          <span class="outline-badge">Gezonde, zelf samengestelde avondmaaltijden</span>
         </div>
-        <div class="recipe-filters" role="group" aria-label="Filter recepten">
-          <button class="filter-chip is-active" type="button" data-diet="alles" aria-pressed="true">Alles</button>
+        <div class="weekly-picker">
+          <div class="weekly-picker-top">
+            <div><span class="weekly-kicker">KIES JOUW SUPERMARKT</span><strong>Jouw week. Jouw acties.</strong></div>
+            <span id="weekly-range" class="weekly-range">Deze actieweek</span>
+          </div>
+          <div class="weekly-picker-controls">
+            <label>Supermarktketen
+              <select id="recipe-store">
+                <option value="albert_heijn">Albert Heijn</option>
+                <option value="lidl">Lidl</option>
+                <option value="jumbo">Jumbo</option>
+                <option value="hoogvliet">Hoogvliet</option>
+                <option value="dirk">Dirk</option>
+              </select>
+            </label>
+            <label>Mijn vestiging <small>(optioneel, op dit apparaat)</small>
+              <input id="recipe-branch" maxlength="110" placeholder="Bijv. Jumbo Binnenrotte, Rotterdam" autocomplete="off">
+            </label>
+          </div>
+          <p class="branch-disclaimer" id="weekly-branch-notice">Acties komen uit ketenbrede brongegevens. Filiaalvoorraad en lokale afwijkingen zijn niet bevestigd. Controleer de aanbieding bij je gekozen vestiging.</p>
+        </div>
+        <div class="recipe-filters" role="group" aria-label="Filter actierecepten">
+          <button class="filter-chip is-active" type="button" data-diet="alles" aria-pressed="true">Alle actie-recepten</button>
           <button class="filter-chip" type="button" data-diet="vegetarisch" aria-pressed="false">Vegetarisch</button>
           <button class="filter-chip" type="button" data-diet="vegan" aria-pressed="false">Vegan</button>
           <button class="filter-chip" type="button" data-diet="vis" aria-pressed="false">Met vis</button>
           <button class="filter-chip" type="button" data-diet="snel" aria-pressed="false">Binnen 30 min</button>
-          <label class="recipe-search"><span class="sr-only">Zoek recepten</span><input id="recipe-search" placeholder="Zoek ingrediënt of gerecht…"><span aria-hidden="true">⌕</span></label>
+          <label class="recipe-search"><span class="sr-only">Zoek recepten en actie-ingrediënten</span><input id="recipe-search" placeholder="Zoek gerecht of ingrediënt…"><span aria-hidden="true">⌕</span></label>
         </div>
+        <div class="weekly-status-row"><p id="weekly-status" role="status" aria-live="polite">Acties ophalen en recepten samenstellen…</p><button id="add-week-to-list" type="button" class="outline-button" disabled>+ Voeg alle weekingrediënten toe</button></div>
         <div id="recipes-grid" class="recipes-grid" aria-live="polite"></div>
-        <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Onze voedingsuitgangspunten:</strong> ruime porties groenten (richtlijn: minimaal 150 g per persoon), volkoren waar mogelijk, gevarieerde eiwitbronnen en beperkt toegevoegd zout. Geen medische of automatisch gecertificeerde voedingsclaims. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Lees de richtlijnen van het Voedingscentrum ↗</a></p></div>
+        <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Transparant over kortingen:</strong> een getoond actieproduct is daadwerkelijk gevonden in de actuele bron van de gekozen keten. Andere ingrediënten kunnen de normale prijs hebben; er wordt geen fictieve recept- of weekprijs berekend. Actiedata kunnen tijdens de week verlopen en regionale verschillen zijn mogelijk. Bron: <a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet ↗</a>. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Gezonde voedingsrichtlijnen ↗</a>.</p></div>
       </section>
 
       <section id="lijst" class="content-section list-section">
