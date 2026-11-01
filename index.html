@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1827">
+  <meta name="description" content="SUPERSCAN 2.0: ontdek actuele aanbiedingen, vergelijk supermarktprijzen, bewaar je boodschappenlijst en plan gezonde avondmaaltijden.">
+  <meta property="og:title" content="SUPERSCAN 2.0 — Slim boodschappen doen">
+  <meta property="og:description" content="Boodschappen, aanbiedingen en gezonde recepten. Alles op één plek.">
+  <title>SUPERSCAN 2.0 — Slim boodschappen doen</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Direct naar inhoud</a>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="SUPERSCAN startpagina"><span class="brand-mark" aria-hidden="true">S<span>.</span></span><span class="brand-type">SUPER<span>SCAN</span><small>2.0</small></span></a>
+      <nav class="nav desktop-nav" aria-label="Hoofdnavigatie">
+        <a href="#aanbiedingen">Aanbiedingen</a>
+        <a href="#vergelijken">Prijsvergelijker</a>
+        <a href="#recepten">Recepten</a>
+      </nav>
+      <a href="#lijst" class="top-list-link"><span class="icon" aria-hidden="true">▤</span> Mijn lijst <span class="count-pill" id="nav-count">0</span></a>
+    </header>
+    <main id="main">
+      <section id="home" class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-copy">
+          <div class="eyebrow hero-eyebrow"><span class="pulse"></span> JOUW SLIMME BOODSCHAPPENASSISTENT</div>
+          <h1>Meer besparen.<br><em>Beter eten.</em><br>Slimmer kiezen.</h1>
+          <p>Alle aanbiedingen op één plek. Vergelijk je complete boodschappenlijst en ontdek makkelijke, gezonde avondrecepten.</p>
+          <form id="hero-search" class="hero-search" role="search">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <label class="sr-only" for="hero-query">Zoek producten of aanbiedingen</label>
+            <input id="hero-query" name="q" placeholder="Zoek bijvoorbeeld koffie, pasta, bananen..." autocomplete="off" required>
+            <button type="submit" class="btn btn-lime">Zoeken <span aria-hidden="true">↗</span></button>
+          </form>
+          <div class="hero-suggestions"><span>Populair:</span><button type="button" data-quick="koffie">Koffie</button><button type="button" data-quick="melk">Melk</button><button type="button" data-quick="pasta">Pasta</button></div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+          <div class="hero-bag"><span class="bag-handle"></span><span class="bag-logo">S<span>.</span></span></div>
+          <span class="hero-food food-1">🥑</span><span class="hero-food food-2">🥦</span><span class="hero-food food-3">🍋</span><span class="hero-food food-4">🥕</span>
+          <div class="floating-card float-top"><span class="floating-icon">↘</span><strong>Deals ontdekken</strong><small>Actueel &amp; overzichtelijk</small></div>
+          <div class="floating-card float-bottom"><span class="floating-icon">✓</span><strong>Jouw lijst, jouw regels</strong><small>Altijd bij de hand</small></div>
+        </div>
+        <div class="hero-bottom"><span><span class="dot"></span> Data met bronvermelding</span><span>Geen account nodig</span><span>Boodschappenlijst lokaal opgeslagen</span></div>
+      </section>
+
+      <section class="value-strip" aria-label="Wat kun je met Superscan?">
+        <div><span class="strip-symbol">%</span><strong>Alle deals</strong><small>Acties met geldigheidsdatum</small></div>
+        <div><span class="strip-symbol">≋</span><strong>Vergelijk winkels</strong><small>Prijs &amp; dekking inzichtelijk</small></div>
+        <div><span class="strip-symbol">▤</span><strong>Bewaar je lijst</strong><small>Ook na het sluiten van je browser</small></div>
+        <div><span class="strip-symbol">✳</span><strong>Gezond koken</strong><small>Maaltijden met veel groenten</small></div>
+      </section>
+
+      <section id="aanbiedingen" class="content-section">
+        <div class="section-header">
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> SLIM KOPEN</div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen en bekijk wanneer een actie afloopt.</p></div>
+          <div class="live-badge"><span class="pulse"></span><span id="deals-updated">Brongegevens laden…</span></div>
+        </div>
+        <div class="toolbar">
+          <label class="filter-search"><span aria-hidden="true">⌕</span><span class="sr-only">Zoek aanbiedingen</span><input id="deals-search" placeholder="Zoek in aanbiedingen…" autocomplete="off"></label>
+          <label class="select-wrap"><span class="sr-only">Filter op supermarkt</span><select id="store-filter"><option value="all">Alle supermarkten</option></select></label>
+          <label class="select-wrap"><span class="sr-only">Sorteer aanbiedingen</span><select id="deals-sort"><option value="discount">Grootste korting</option><option value="price">Laagste prijs</option><option value="expiry">Loopt eerst af</option></select></label>
+        </div>
+        <div id="deals-grid" class="deals-grid" aria-live="polite"><div class="empty-state"><span>↻</span><strong>Aanbiedingen laden…</strong><p>We controleren de beschikbare prijsgegevens.</p></div></div>
+        <div class="section-foot"><p id="deals-count">Alleen bevestigde, lopende acties worden weergegeven.</p><a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">Aanbiedingen via PrijsProfeet ↗</a></div>
+      </section>
+
+      <section id="vergelijken" class="content-section compare-section">
+        <div class="section-header">
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> WEET WAT JE BETAALT</div><h2>Vergelijk. <span>Kies slimmer.</span></h2><p>Zoek een product en vergelijk indicatieve naam-matches per winkel.</p></div>
+          <a class="subtle-link" href="#lijst">Vergelijk mijn complete lijst ↗</a>
+        </div>
+        <div class="compare-panel">
+          <form id="compare-form" class="compare-form">
+            <label for="compare-query">Welk product wil je vergelijken?</label>
+            <div class="compare-input-row"><input id="compare-query" placeholder="Bijv. halfvolle melk 1 liter" required><button class="btn btn-dark" type="submit">Vergelijk prijzen <span aria-hidden="true">→</span></button></div>
+          </form>
+          <p class="fineprint" id="prices-updated">Prijzen worden ingeladen. Productmatches zijn indicatief en kunnen qua merk of verpakking verschillen.</p>
+          <div class="compare-results" id="compare-results" aria-live="polite"><div class="hint-panel"><span class="hint-icon">↗</span><div><strong>Begin met een product</strong><p>Je ziet per winkel een gevonden product, verpakking en prijs — zonder geschatte prijzen.</p></div></div></div>
+        </div>
+      </section>
+
+      <section id="recepten" class="content-section recipes-section">
+        <div class="section-header">
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> ELKE DAG LEKKER</div><h2>Wat eten we <span>vanavond?</span></h2><p>Zelf samengestelde avondrecepten met veel groenten, volkorenproducten en eiwitbronnen.</p></div>
+          <span class="outline-badge">Gebaseerd op Schijf van Vijf-principes</span>
+        </div>
+        <div class="recipe-filters" role="group" aria-label="Filter recepten">
+          <button class="filter-chip is-active" type="button" data-diet="alles" aria-pressed="true">Alles</button>
+          <button class="filter-chip" type="button" data-diet="vegetarisch" aria-pressed="false">Vegetarisch</button>
+          <button class="filter-chip" type="button" data-diet="vegan" aria-pressed="false">Vegan</button>
+          <button class="filter-chip" type="button" data-diet="vis" aria-pressed="false">Met vis</button>
+          <button class="filter-chip" type="button" data-diet="snel" aria-pressed="false">Binnen 30 min</button>
+          <label class="recipe-search"><span class="sr-only">Zoek recepten</span><input id="recipe-search" placeholder="Zoek ingrediënt of gerecht…"><span aria-hidden="true">⌕</span></label>
+        </div>
+        <div id="recipes-grid" class="recipes-grid" aria-live="polite"></div>
+        <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Onze voedingsuitgangspunten:</strong> ruime porties groenten (richtlijn: minimaal 150 g per persoon), volkoren waar mogelijk, gevarieerde eiwitbronnen en beperkt toegevoegd zout. Geen medische of automatisch gecertificeerde voedingsclaims. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Lees de richtlijnen van het Voedingscentrum ↗</a></p></div>
+      </section>
+
+      <section id="lijst" class="content-section list-section">
+        <div class="section-header">
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> ALLES ONDER CONTROLE</div><h2>Mijn <span>boodschappenlijst.</span></h2><p>Maak je lijst, vink producten af en vergelijk je mandje tussen winkels.</p></div>
+          <span class="outline-badge" id="list-storage-status">Op dit apparaat opgeslagen</span>
+        </div>
+        <div class="list-layout">
+          <div class="list-card">
+            <div class="list-card-header"><div><strong>Jouw boodschappen</strong><p id="list-progress">Nog geen producten</p></div><button id="clear-checked" class="text-button" type="button">Verwijder afgevinkte</button></div>
+            <form id="add-item-form" class="list-add"><label class="sr-only" for="list-item-input">Nieuw product</label><input id="list-item-input" placeholder="Bijv. bananen, 1 kg" maxlength="120" required><button type="submit" class="btn btn-lime" aria-label="Product toevoegen">+ <span>Toevoegen</span></button></form>
+            <ul id="shopping-items" class="shopping-items" aria-live="polite"></ul>
+            <div class="list-actions"><button id="export-list" class="outline-button" type="button">↓ Exporteer lijst</button><button id="import-list" class="outline-button" type="button">↑ Importeer lijst</button><input id="import-file" type="file" accept="application/json,.json" hidden><button id="reset-list" class="text-button danger" type="button">Wis alles</button></div>
+          </div>
+          <div class="basket-card">
+            <div class="basket-top"><span class="basket-star">✦</span><span>SUPERSCAN TIP</span></div>
+            <h3>Waar is jouw mandje het voordeligst?</h3>
+            <p>Vergelijk het totaal voor je niet-afgevinkte producten bij winkels met voldoende gegevens.</p>
+            <button id="basket-compare" class="btn btn-white" type="button">Bereken mijn mandje <span aria-hidden="true">→</span></button>
+            <div id="basket-results" class="basket-results"><p>Voeg producten toe om je lijst te vergelijken.</p></div>
+            <a id="checkjebon-link" href="https://www.checkjebon.nl/" target="_blank" rel="noopener noreferrer">Bekijk ook op Checkjebon.nl ↗</a>
+          </div>
+        </div>
+        <p class="data-disclaimer">Je lijst blijft in de lokale opslag van deze browser, niet in een online account. Maak een export als back-up of om je lijst op een ander apparaat te gebruiken. Vergelijkingen op basis van productnamen zijn niet gegarandeerd identiek en kunnen per filiaal afwijken.</p>
+      </section>
+
+      <section class="closing-cta"><div><span class="eyebrow">GOED VOOR JE PORTEMONNEE</span><h2>Elke boodschap <em>telt.</em></h2><p>Van aanbiedingen tot avondeten. Maak het jezelf makkelijker.</p></div><a href="#aanbiedingen" class="btn btn-lime">Ontdek de aanbiedingen <span aria-hidden="true">↗</span></a></section>
+    </main>
+    <footer class="footer"><div><a class="brand footer-brand" href="#home"><span class="brand-mark">S<span>.</span></span><span class="brand-type">SUPER<span>SCAN</span><small>2.0</small></span></a><p>Slim besparen. Gezond genieten.</p></div><div class="footer-links"><a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet (aanbiedingen)</a><a href="https://www.checkjebon.nl" target="_blank" rel="noopener noreferrer">Checkjebon (prijzen)</a><a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Voedingscentrum (richtlijnen)</a><a href="https://github.com/DASPHHS/SUPERSCAN2.0" target="_blank" rel="noopener noreferrer">Open source op GitHub</a></div><small>© <span id="year"></span> SUPERSCAN 2.0. Onafhankelijk initiatief; geen supermarktpartnerschap. Controleer prijzen in de winkel.</small></footer>
+  </div>
+  <dialog id="recipe-dialog" class="recipe-dialog" aria-labelledby="recipe-dialog-title"><div id="recipe-dialog-content"></div><button class="dialog-close" id="recipe-close" type="button" aria-label="Sluit recept">×</button></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
