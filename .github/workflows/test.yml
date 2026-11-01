@@ -26,6 +26,7 @@ jobs:
           node --check src/app.js
           node --check src/pricing.js
           node --check src/recipes.js
+          node --check src/meal-engine.js
           node --check sw.js
       - name: Run unit tests
         run: |

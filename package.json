@@ -5,6 +5,6 @@
   "type": "module",
   "description": "Nederlandse supermarktprijzen, aanbiedingen, gezonde recepten en lokale boodschappenlijst",
   "scripts": {
-    "test": "node --test tests/pricing.test.mjs"
+    "test": "node --test tests/*.test.mjs"
   }
 }

@@ -1,0 +1,89 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {buildActionMeals} from "../src/meal-engine.js";
+
+const day="2026-11-02";
+const deal=(id,name,retailer="jumbo",extra={})=>({
+  id,name,retailer,price:1.75,original:2.50,savings:30,status:"active",
+  valid_from:"2026-11-02",valid_until:"2026-11-08",...extra
+});
+
+test("empty or unrelated actions produce zero recipes, not fillers",()=>{
+  assert.deepEqual(buildActionMeals([],"jumbo",day),[]);
+  assert.deepEqual(buildActionMeals([deal("x","Jumbo chocopasta"),deal("y","Jumbo cola")],"jumbo",day),[]);
+  assert.deepEqual(buildActionMeals([deal("x","Jumbo broccoli"),deal("y","Jumbo rode paprika")],"aldi",day),[]);
+});
+test("at least two different real offers per generated complete dinner",()=>{
+  const offers=[deal("a","Jumbo broccoli 500 gram"),deal("b","Jumbo courgette 1 stuk")];
+  const menu=buildActionMeals(offers,"jumbo",day);
+  assert.ok(menu.length>=1);
+  for(const entry of menu){
+    assert.equal(entry.matches.length,2);
+    assert.equal(new Set(entry.matches.map(m=>m.offer.id)).size,2);
+    assert.ok(entry.recipe.ingredients.length>=4);
+    assert.ok(entry.recipe.steps.length>=4);
+    assert.ok(entry.recipe.title.includes("broccoli") && entry.recipe.title.includes("courgette"));
+    assert.ok(entry.matches.every(m=>m.offer.retailer==="jumbo"));
+  }
+});
+test("recipes are genuinely tailored: swap promotional ingredients, change meal title and shopping list",()=>{
+  const a=buildActionMeals([deal("a","Jumbo broccoli"),deal("b","Jumbo courgette")],"jumbo",day);
+  const b=buildActionMeals([deal("a","Jumbo broccoli"),deal("c","Jumbo rode paprika")],"jumbo",day);
+  assert.notEqual(a[0].recipe.title,b[0].recipe.title);
+  assert.notDeepEqual(a[0].recipe.ingredients.slice(0,2),b[0].recipe.ingredients.slice(0,2));
+});
+test("expired, future, missing, off-store deals never count",()=>{
+  assert.deepEqual(buildActionMeals([
+    deal("a","Jumbo broccoli"),
+    deal("b","Jumbo courgette","jumbo",{status:"upcoming"}),
+    deal("c","Jumbo spinazie","lidl"),
+    deal("d","Jumbo rode paprika","jumbo",{valid_until:"2026-11-01"})
+  ],"jumbo",day),[]);
+});
+test("one offer matching two aliases cannot trigger a recipe by itself",()=>{
+  const offers=[deal("same","Jumbo paprika mix rode gele paprika")];
+  assert.deepEqual(buildActionMeals(offers,"jumbo",day),[]);
+});
+test("does not match ready meals, soup or shampoo as vegetables",()=>{
+  const offers=[
+    deal("a","Jumbo broccoli soep"),
+    deal("b","Jumbo courgette maaltijd salade"),
+    deal("c","Jumbo spinazie shampoo")
+  ];
+  assert.deepEqual(buildActionMeals(offers,"jumbo",day),[]);
+});
+test("deterministic, diverse and no more than 7 recipes",()=>{
+  const offers=[
+    deal("a","Jumbo broccoli"),deal("b","Jumbo courgette"),deal("c","Jumbo rode paprika"),
+    deal("d","Jumbo cherrytomaten"),deal("e","Jumbo verse spinazie"),deal("f","Jumbo wortel"),
+    deal("g","Jumbo pompoenblokjes"),deal("h","Jumbo kastanjechampignons"),
+    deal("i","Jumbo prei"),deal("j","Jumbo komkommer"),
+  ];
+  const a=buildActionMeals(offers,"jumbo",day),b=buildActionMeals(offers,"jumbo",day);
+  assert.deepEqual(a,b);
+  assert.ok(a.length>2 && a.length<=7);
+  assert.equal(new Set(a.map(e=>e.method)).size,a.length);
+});
+test("chicken or fish must itself be on offer alongside a matching vegetable",()=>{
+  const offers=[
+    deal("a","Jumbo verse zalmfilet 200 g"),
+    deal("b","Jumbo broccoli 500g"),
+  ];
+  const plan=buildActionMeals(offers,"jumbo",day);
+  const fish=plan.find(p=>p.recipe.diet==="vis");
+  assert.ok(fish);
+  assert.equal(fish.matches[0].offer.id,"a");
+  assert.ok(fish.recipe.steps.some(step=>step.includes("vis")));
+});
+
+test("discounted staple plus actual vegetable can generate a dinner",()=>{
+  const menu=buildActionMeals([
+    deal("a","Jumbo broccoli 500g"),
+    deal("b","Jumbo volkoren pasta 500g")
+  ],"jumbo",day);
+  const pasta=menu.find(e=>e.recipe.category==="Volkoren pasta");
+  assert.ok(pasta);
+  assert.deepEqual(pasta.matches.map(m=>m.offer.id).sort(),["a","b"]);
+  assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="volkoren pasta"));
+  assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="broccoli"));
+});
