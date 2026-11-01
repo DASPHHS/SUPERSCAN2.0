@@ -34,12 +34,12 @@ De knoppen **Deze week / Volgende week** werken alleen wanneer de bron voor die 
 
 SUPERSCAN heeft binnen **Weekrecepten** een aparte sectie **HelloFresh-recepten die bij jouw acties passen**. Het is geen willekeurige receptfeed: een recept verschijnt **alleen wanneer minstens één daadwerkelijk benoemd ingrediënt in de aanbieding is** bij de gekozen supermarkt en binnen de geselecteerde week.
 
-- Startindex: een kleine, handmatig gecontroleerde reeks Nederlandse HelloFresh-recepten met **echte directe officiële bronlinks** en een korte, feitelijke ingrediëntenindex. De volledige bereidingswijze, afbeeldingen, voedingswaarden en exacte hoeveelheden staan op de officiële HelloFresh-site.
+- Startindex: 22 handmatig gecontroleerde Nederlandse HelloFresh-recepten met **echte directe officiële bronlinks** en een korte, feitelijke ingrediëntenindex. De volledige bereidingswijze, afbeeldingen, voedingswaarden en exacte hoeveelheden staan op de officiële HelloFresh-site.
 - In elke kaart zie je de gevonden actieproducten en de actuele prijs per verpakking. Het doorklikken gaat naar het bronrecept; de boodschappenlijstknop voegt ingrediëntnamen toe met de markering **"hoeveelheid: zie HelloFresh"**, want de startindex heeft geen geverifieerde receptportiehoeveelheden.
 - Exacte recepten, foto's, PDF-kaarten of auteursrechtelijk beschermde bereidingsinstructies worden **niet** gekopieerd of opnieuw gepubliceerd. Dit is een onafhankelijke index, **geen officiële HelloFresh-samenwerking**.
 - De code voor het matchen staat in src/hellofresh.js, de startindex in data/hellofresh.json, de importadapter in scripts/sync_hellofresh.py.
 - Voor de grotere [HelloFresh Database](https://github.com/moshetrenk/hellofresh-database) op [hfresh.info](https://hfresh.info/) geldt **registratie voor de API**. De MIT-licentie op de code geeft **niet automatisch** hergebruikrechten op alle receptcontent. Alleen als een bevoegde gebruiker zelf toegestane API-toegang heeft, kan in de GitHub-repository een Actions-secret met naam HFRESH_API_TOKEN worden toegevoegd. De importer zoekt dan een beperkte selectie feitelijke receptmetadata (titels, ingrediëntnamen en links) zonder instructies of afbeeldingen. Dit is een afhankelijke, **nog niet live geverifieerde API-integratie**.
-- Zonder token of bij uitval van die API blijft de gecontroleerde officiële HelloFresh-index intact. Dit is momenteel **niet de complete HelloFresh-catalogus**.
+- Zonder token of bij uitval van die API blijft de gecontroleerde officiële HelloFresh-index van **22 recepten** intact. Dit is momenteel **niet de complete HelloFresh-catalogus**.
 
 Voor de API-verbinding: GitHub → DASPHHS/SUPERSCAN2.0 → Settings → Secrets and variables → Actions → New repository secret → HFRESH_API_TOKEN; voeg een geldig, voor deze toepassing toegestaan toegangstoken toe. **Stuur je token nooit naar een openbare chat of repositorybestand.**
 
@@ -130,3 +130,9 @@ SUPERSCAN is een onafhankelijk project, niet gelieerd aan supermarkten, Checkjeb
 ### Productherkenning
 
 De receptenkoppeling gebruikt naast ingrediëntnamen ook de PrijsProfeet-categorie en een conservatieve uitsluitlijst. Producten zoals paprikachips, kant-en-klare maaltijdmixen, smoothies of verzorgingsproducten kunnen geen groente/eiwit voor een gerecht zijn. Dit blijft een heuristiek: externe bronclassificaties kunnen onjuist zijn. In dat geval kan SUPERSCAN minder recepten tonen; dat is betrouwbaarder dan een verzonnen match. Tests bevatten daadwerkelijke eerder fout gekoppelde producttitels.
+
+### Officiële HelloFresh website als aanvullende receptenbron
+
+De openbare website [hellofresh.nl/recipes](https://www.hellofresh.nl/recipes) wordt nu gebruikt voor de **controleerbare receptlinks** in data/hellofresh.json. De handmatig geverifieerde catalogus omvat 22 directe Nederlandse receptenpagina's met bekende ingrediënten en kooktijd, verdeeld over kip, rundvlees, varkensvlees, veganistisch en vegetarisch koken. Een eerder niet betrouwbaar bevestigde link is verwijderd. Vanuit de UI kun je ook bladeren door de officiële categorieën [Vlees](https://www.hellofresh.nl/recipes/vlees-recepten), [Vegetarisch](https://www.hellofresh.nl/recipes/vegetarische-recepten) en [Vis](https://www.hellofresh.nl/recipes/vis-recepten).
+
+Deze verwijzingen zijn geen volledige of automatisch gekopieerde HelloFresh-database. De receptenkaart wordt pas getoond als een werkelijk passend actieproduct bij de gekozen supermarkt en actieweek aanwezig is. Geen foto's, stappen of volledige HelloFresh-recepttekst worden gespiegeld. De oorspronkelijke site blijft bron voor aantallen, ingrediënten die niet in de index staan, allergenen en bereiding.

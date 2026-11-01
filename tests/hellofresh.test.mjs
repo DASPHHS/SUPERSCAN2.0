@@ -67,3 +67,24 @@ test("prepared meat and ingredients without recognized names are not assigned fa
  ingredients:[{name:"Vegetarische gehaktballetjes"},{name:"Paprikachips"}]}];
  assert.deepEqual(matchHelloFreshRecipes(recipes,[offer("a","Jumbo kipfilet")],"jumbo",t),[]);
 });
+
+test("expanded official HelloFresh archive includes verified poultry, pork, beef and vegan links",()=>{
+ assert.ok(data.recipes.length>=20,"Official linked catalogue must include at least twenty verified entries");
+ assert.equal(new Set(data.recipes.map(r=>r.url)).size,data.recipes.length);
+ for(const diet of ["kip","rund","varken","vegan","vegetarisch"]){
+   assert.ok(data.recipes.some(r=>r.diet===diet),"Missing official recipes in "+diet);
+ }
+ assert.ok(data.recipes.every(r=>r.url.startsWith("https://www.hellofresh.nl/recipes/")));
+ assert.equal(data.sourceUrl,"https://www.hellofresh.nl/recipes");
+});
+test("official archive matching shows real deal-specific choices, never all catalogue entries",()=>{
+ const promo=[offer("broccoli","Jumbo Verse broccoli 500g","jumbo",{category:"groente-fruit"})];
+ const matched=matchHelloFreshRecipes(data.recipes,promo,"jumbo",t);
+ assert.ok(matched.length>=5,"Many real HelloFresh dishes include broccoli");
+ assert.ok(matched.length<data.recipes.length);
+ for(const e of matched){
+   assert.ok(e.matches.length>=1);
+   assert.ok(e.matches.every(x=>x.offer.id==="broccoli"));
+   assert.ok(e.recipe.ingredients.some(i=>i.key==="broccoli"));
+ }
+});

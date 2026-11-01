@@ -1,8 +1,8 @@
 {
-  "source": "HelloFresh Nederland – publieke receptverwijzingen",
-  "sourceType": "official-links",
+  "source": "HelloFresh Nederland – gecontroleerde officiële receptpagina's",
+  "sourceType": "curated-official-recipe-links",
   "updatedAt": "2026-11-01",
-  "notice": "Titels, bronlinks en uitsluitend feitelijke ingrediënten als zoekindex; instructies, foto's en volledige receptkaarten staan bij HelloFresh.",
+  "notice": "Handmatig geverifieerde openbare receptverwijzingen met feitelijke ingrediënten; instructies, afbeeldingen, hoeveelheden en auteursrechtelijke content blijven op de oorspronkelijke HelloFresh-pagina. Geen volledige of automatisch gespiegelde databank.",
   "recipes": [
     {
       "id": "hf-kipfilethaasjes-broccoli",
@@ -142,25 +142,478 @@
       ]
     },
     {
-      "id": "hf-rigatoni-broccoli",
-      "title": "Rigatoni met Zweedse stijl gehaktballetjes",
-      "url": "https://www.hellofresh.nl/recipes/pasta-met-zweedse-stijl-gehaktballetjes-in-roomsaus-66d6d2b84af7e0a57fe00b65",
+      "id": "hf-kip-mosterd-room",
+      "title": "Kipfilet in mosterd-roomsaus",
+      "url": "https://www.hellofresh.nl/recipes/kipfilet-in-mosterd-roomsaus-5d7281bf0dcef10011285148",
       "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfilet",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Kastanjechampignons",
+          "key": "kastanjechampignons"
+        },
+        {
+          "name": "Vastkokende aardappelen",
+          "key": null
+        },
+        {
+          "name": "Sjalot",
+          "key": null
+        },
+        {
+          "name": "Slagroom",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kip-broccolisalade",
+      "title": "Gebakken kipfilet met broccolisalade en aardappelen",
+      "url": "https://www.hellofresh.nl/recipes/gebakken-kipfilet-met-broccolisalade-en-aardappelen-564ee1b5fd2cb997638b4567",
+      "minutes": 35,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfiletstukjes",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Vastkokende aardappelen",
+          "key": null
+        },
+        {
+          "name": "Krulandijvie",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-groene-curry-kip",
+      "title": "Groene curry met kip",
+      "url": "https://www.hellofresh.nl/recipes/groene-curry-met-kip-642430080eb3f556019d5407",
+      "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfiletblokjes",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Wortel",
+          "key": "wortel"
+        },
+        {
+          "name": "Bruine snelkookrijst",
+          "key": null
+        },
+        {
+          "name": "Kokosmelk",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kip-yakitori",
+      "title": "Kip yakitori met zoete sojasaus en gomasio",
+      "url": "https://www.hellofresh.nl/recipes/kip-yakitori-met-zoete-sojasaus-en-gomasio-628665c4f22d57edf30a0afd",
+      "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipsatéblokjes",
+          "key": null
+        },
+        {
+          "name": "Broccoliroosjes",
+          "key": "broccoli"
+        },
+        {
+          "name": "Wortel",
+          "key": "wortel"
+        },
+        {
+          "name": "Jasmijnrijst",
+          "key": null
+        },
+        {
+          "name": "Bosui",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-eenpanspasta-alfredo",
+      "title": "Eenpanspasta kip Alfredo",
+      "url": "https://www.hellofresh.nl/recipes/eenpanspasta-kip-alfredo-5e174e9f8303bb3e0759f9b5",
+      "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Gemarineerde kipfiletreepjes",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Penne",
+          "key": null
+        },
+        {
+          "name": "Slagroom",
+          "key": null
+        },
+        {
+          "name": "Italiaanse kaas",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-fusilli-ricotta",
+      "title": "Fusilli met kip in frisse ricottasaus",
+      "url": "https://www.hellofresh.nl/recipes/fusilli-met-kip-in-frisse-ricottasaus-5ea01cdb728ab769b66c3cb0",
+      "minutes": 35,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfilet met tuinkruiden",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Fusilli",
+          "key": null
+        },
+        {
+          "name": "Ricotta",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kip-stroganoff",
+      "title": "Kip stroganoff met rijst",
+      "url": "https://www.hellofresh.nl/recipes/kip-stroganoff-met-rijst-61cdc6a194c33e6c0c31d952",
+      "minutes": 35,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfilethaasjes",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Paprika",
+          "key": "rode paprika"
+        },
+        {
+          "name": "Champignons",
+          "key": null
+        },
+        {
+          "name": "Witte langgraanrijst",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-bami-kippendij",
+      "title": "Bami in Surinaamse stijl met kippendijreepjes",
+      "url": "https://www.hellofresh.nl/recipes/bami-in-surinaamse-stijl-met-kippendijreepjes-61b0c1f9c28ee61e355db53e",
+      "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kippendijreepjes met kebabkruiden",
+          "key": "kipdijfilet"
+        },
+        {
+          "name": "Komkommer",
+          "key": "komkommer"
+        },
+        {
+          "name": "Spaghetti",
+          "key": null
+        },
+        {
+          "name": "Ui",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-bao-varkenshaas",
+      "title": "Bao bun met sticky varkenshaas",
+      "url": "https://www.hellofresh.nl/recipes/bao-bun-met-sticky-varkenshaas-61e969bb93fc69476b5d53be",
+      "minutes": 35,
       "diet": "varken",
+      "ingredients": [
+        {
+          "name": "Varkenshaas",
+          "key": "varkenshaas"
+        },
+        {
+          "name": "Komkommer",
+          "key": "komkommer"
+        },
+        {
+          "name": "Gesneden spitskool",
+          "key": null
+        },
+        {
+          "name": "Sugarsnaps",
+          "key": null
+        },
+        {
+          "name": "Bao-broodje",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-varkensfilet-broccoli",
+      "title": "Varkensfilet in spek met gekookte aardappelen",
+      "url": "https://www.hellofresh.nl/recipes/varkensfilet-in-spek-met-gekookte-aardappelen-62331fd147b927369a0d2f3b",
+      "minutes": 30,
+      "diet": "varken",
+      "ingredients": [
+        {
+          "name": "Varkensfilet",
+          "key": null
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Aardappelen",
+          "key": null
+        },
+        {
+          "name": "Ontbijtspek",
+          "key": null
+        },
+        {
+          "name": "Sjalot",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-lasagne-rundergehakt",
+      "title": "Groentelasagne met rundergehakt als extra",
+      "url": "https://www.hellofresh.nl/recipes/veggie-protein-groentelasagne-met-rundergehakt-als-extra-61713ac72da770798e4db4f2",
+      "minutes": 55,
+      "diet": "rund",
+      "ingredients": [
+        {
+          "name": "Rundergehakt",
+          "key": "rundergehakt"
+        },
+        {
+          "name": "Courgette",
+          "key": "courgette"
+        },
+        {
+          "name": "Spinazie",
+          "key": "verse spinazie"
+        },
+        {
+          "name": "Verse lasagnebladen",
+          "key": null
+        },
+        {
+          "name": "Kookroom",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-romige-broccoli-courgette",
+      "title": "Romige spaghetti met broccoli en courgette",
+      "url": "https://www.hellofresh.nl/recipes/romige-spaghetti-met-broccoli-en-courgette-61d8245630537a1cff41a954",
+      "minutes": 25,
+      "diet": "vegetarisch",
       "ingredients": [
         {
           "name": "Broccoli",
           "key": "broccoli"
         },
         {
-          "name": "Rigatoni",
+          "name": "Courgette",
+          "key": "courgette"
+        },
+        {
+          "name": "Rode ui",
+          "key": "rode ui"
+        },
+        {
+          "name": "Spaghetti",
           "key": null
         },
         {
-          "name": "Gehaktballetjes van varken en rund",
+          "name": "Geitenkaas",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-melanzane-aubergine",
+      "title": "Melanzane alla parmigiana",
+      "url": "https://www.hellofresh.nl/recipes/melanzane-alla-parmigiana-623c51acb9a8b421dd4c7e77",
+      "minutes": 50,
+      "diet": "vegetarisch",
+      "ingredients": [
+        {
+          "name": "Aubergine",
+          "key": "aubergine"
+        },
+        {
+          "name": "Tomatenblokjes",
+          "key": "tomatenblokjes"
+        },
+        {
+          "name": "Mozzarella",
+          "key": null
+        },
+        {
+          "name": "Passata",
+          "key": null
+        },
+        {
+          "name": "Ui",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-pasta-paprika-geitenkaas",
+      "title": "Pasta met geroosterde-paprikasaus en geitenkaas",
+      "url": "https://www.hellofresh.nl/recipes/pasta-met-geroosterde-paprikasaus-en-geitenkaas-6229e608e697d4651c2103c4",
+      "minutes": 50,
+      "diet": "vegetarisch",
+      "ingredients": [
+        {
+          "name": "Paprika",
+          "key": "rode paprika"
+        },
+        {
+          "name": "Courgette",
+          "key": "courgette"
+        },
+        {
+          "name": "Rode ui",
+          "key": "rode ui"
+        },
+        {
+          "name": "Spaghetti",
+          "key": null
+        },
+        {
+          "name": "Geitenkaas",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-linguine-kipgehakt",
+      "title": "Snelle linguine met kipgehakt",
+      "url": "https://www.hellofresh.nl/recipes/snelle-linguine-met-kipgehakt-6220dec265050c1da64af3c6",
+      "minutes": 20,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipgehakt met Italiaanse kruiden",
+          "key": null
+        },
+        {
+          "name": "Spinazie",
+          "key": "verse spinazie"
+        },
+        {
+          "name": "Cherrytomaten in blik",
+          "key": null
+        },
+        {
+          "name": "Linguine",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kikkererwten-curry-cashewnoten",
+      "title": "Krokante kikkererwten met zoete romige currysaus",
+      "url": "https://www.hellofresh.nl/recipes/krokante-kikkererwten-met-zoete-romige-currysaus-699869b91d69a6906de1f49b",
+      "minutes": 25,
+      "diet": "vegan",
+      "ingredients": [
+        {
+          "name": "Kikkererwten",
+          "key": "kikkererwten"
+        },
+        {
+          "name": "Tomaat",
+          "key": "tomaten"
+        },
+        {
+          "name": "Wortel",
+          "key": "wortel"
+        },
+        {
+          "name": "Bruine snelkookrijst",
+          "key": null
+        },
+        {
+          "name": "Kokosmelk",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-stir-fry-paddenstoelen",
+      "title": "Stir-fry met sticky paddenstoelen en sriracha-mayo",
+      "url": "https://www.hellofresh.nl/recipes/stir-fry-met-sticky-paddenstoelen-en-sriracha-mayo-64b6d82da7c1f8a1e13bb0c6",
+      "minutes": 20,
+      "diet": "vegan",
+      "ingredients": [
+        {
+          "name": "Courgette",
+          "key": "courgette"
+        },
+        {
+          "name": "Gemengde gesneden paddenstoelen",
+          "key": null
+        },
+        {
+          "name": "Wittekool en wortel",
+          "key": null
+        },
+        {
+          "name": "Rijst",
           "key": null
         }
       ]
     }
-  ]
+  ],
+  "sourceUrl": "https://www.hellofresh.nl/recipes"
 }
