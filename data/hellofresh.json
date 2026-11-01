@@ -1,0 +1,166 @@
+{
+  "source": "HelloFresh Nederland – publieke receptverwijzingen",
+  "sourceType": "official-links",
+  "updatedAt": "2026-11-01",
+  "notice": "Titels, bronlinks en uitsluitend feitelijke ingrediënten als zoekindex; instructies, foto's en volledige receptkaarten staan bij HelloFresh.",
+  "recipes": [
+    {
+      "id": "hf-kipfilethaasjes-broccoli",
+      "title": "Kipfilethaasjes met sticky sinaasappelsaus",
+      "url": "https://www.hellofresh.nl/recipes/kipfilethaasjes-met-sticky-sinaasappelsaus-672a529312c55222c8cc92b9",
+      "minutes": 25,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfilethaasjes",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Ui",
+          "key": "ui"
+        },
+        {
+          "name": "Aardappelpartjes",
+          "key": "vastkokende aardappelen"
+        },
+        {
+          "name": "Sinaasappel",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-varkenshaas-champignons",
+      "title": "Varkenshaaspuntjes in champignonroomsaus",
+      "url": "https://www.hellofresh.nl/recipes/varkenshaaspuntjes-in-champignonroomsaus-6a50f311b47c93963c04d5a3",
+      "minutes": 25,
+      "diet": "varken",
+      "ingredients": [
+        {
+          "name": "Varkenshaaspuntjes",
+          "key": "varkenshaas"
+        },
+        {
+          "name": "Kastanjechampignons",
+          "key": "kastanjechampignons"
+        },
+        {
+          "name": "Paprika",
+          "key": "rode paprika"
+        },
+        {
+          "name": "Witte rijst",
+          "key": null
+        },
+        {
+          "name": "Kookroom",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kipfilet-tzatziki",
+      "title": "Kipfilet met tzatziki en sumaksalade",
+      "url": "https://www.hellofresh.nl/recipes/floris-middendorps-favo-kipfilet-met-tzatziki-en-sumaksalade-69e21a58fe534c766c44c22c",
+      "minutes": 20,
+      "diet": "kip",
+      "ingredients": [
+        {
+          "name": "Kipfilet met mediterrane kruiden",
+          "key": "kipfilet"
+        },
+        {
+          "name": "Rode ui",
+          "key": "rode ui"
+        },
+        {
+          "name": "Mini-komkommer",
+          "key": "komkommer"
+        },
+        {
+          "name": "Tomaat",
+          "key": "tomaten"
+        },
+        {
+          "name": "Bulgur",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-noedels-rundergehakt",
+      "title": "Noedels met rundergehakt in romige misosaus",
+      "url": "https://www.hellofresh.nl/recipes/superconvenience_beef-663e2c112d4c511687b2c4a3",
+      "minutes": 10,
+      "diet": "rund",
+      "ingredients": [
+        {
+          "name": "Gekruid rundergehakt",
+          "key": "rundergehakt"
+        },
+        {
+          "name": "Mie noedels",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-kikkererwten-curry",
+      "title": "Kikkererwtencurry met zoete aardappel",
+      "url": "https://www.hellofresh.nl/recipes/double-veggie-kikkererwtencurry-met-zoete-aardappel-615d7883f81cf570121e6df5",
+      "minutes": 40,
+      "diet": "vegan",
+      "ingredients": [
+        {
+          "name": "Kikkererwten",
+          "key": "kikkererwten"
+        },
+        {
+          "name": "Tomatenblokjes",
+          "key": "tomatenblokjes"
+        },
+        {
+          "name": "Spinazie",
+          "key": "verse spinazie"
+        },
+        {
+          "name": "Komkommer",
+          "key": "komkommer"
+        },
+        {
+          "name": "Zoete aardappel",
+          "key": null
+        },
+        {
+          "name": "Basmatirijst",
+          "key": null
+        }
+      ]
+    },
+    {
+      "id": "hf-rigatoni-broccoli",
+      "title": "Rigatoni met Zweedse stijl gehaktballetjes",
+      "url": "https://www.hellofresh.nl/recipes/pasta-met-zweedse-stijl-gehaktballetjes-in-roomsaus-66d6d2b84af7e0a57fe00b65",
+      "minutes": 25,
+      "diet": "varken",
+      "ingredients": [
+        {
+          "name": "Broccoli",
+          "key": "broccoli"
+        },
+        {
+          "name": "Rigatoni",
+          "key": null
+        },
+        {
+          "name": "Gehaktballetjes van varken en rund",
+          "key": null
+        }
+      ]
+    }
+  ]
+}
