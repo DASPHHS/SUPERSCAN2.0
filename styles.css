@@ -154,3 +154,22 @@
   .recipes-section .recipe-card:not(:first-child) .recipe-body{padding:13px}
   .recipes-section .recipe-card:not(:first-child) .recipe-body h3{font-size:14px}
 }
+
+
+/* SpecialeDeals-inspired week tabs, provenance and deal-type selectors */
+.recipe-week-tabs{display:flex;gap:8px;margin:0 0 23px;padding:5px;max-width:440px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.17);border-radius:14px}
+.recipe-week-tabs button{flex:1;cursor:pointer;border:0;border-radius:10px;padding:12px 15px;font-weight:850;font-size:12px;color:#e2f3df;background:transparent;transition:background .2s,color .2s}
+.recipe-week-tabs button.is-active{background:#d2f589;color:#183a28;box-shadow:0 3px 12px #06130b2b}
+.recipe-week-tabs button:focus-visible{outline:3px solid #eef6ae;outline-offset:3px}
+.recipe-source-stamp{display:flex;align-items:center;gap:8px;margin:0 0 12px;color:#6c8068;font-size:11px;line-height:1.6}
+.recipe-source-stamp::before{content:"";background:#85ba44;border-radius:50%;width:7px;height:7px;flex:none}
+.recipe-source-link{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:19px;color:#648060;font-size:11px;flex-wrap:wrap}
+.recipe-source-link a{font-weight:850;color:#3f722f;text-decoration:underline}
+.recipe-source-link span{color:#778c73}
+@media(max-width:580px){
+  .recipe-week-tabs{max-width:none}
+  .toolbar{grid-template-columns:1fr 1fr}
+  .toolbar .select-wrap select{width:100%;min-width:0}
+  .recipe-source-link{display:block}
+  .recipe-source-link span{display:block;margin-top:8px}
+}
