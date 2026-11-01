@@ -1,5 +1,6 @@
 import { RECIPE_RETAILERS, weekBounds } from "./weekly.js";
 import { buildActionMeals } from "./meal-engine.js";
+import { matchHelloFreshRecipes, sanitizeHelloFreshEntries } from "./hellofresh.js";
 import { euro, clean, compareProduct, compareBasket, optimizeTwoStores, isActiveOffer, normalizeOffer, safeUrl, todayNL } from "./pricing.js";
 
 const $ = (selector) => document.querySelector(selector);
@@ -18,6 +19,7 @@ const state = {
   offers:[],stores:[],list:readList(),dealQuery:"",dealStore:"all",dealSort:"discount",
   diet:"alles",recipeQuery:"",activeRecipe:null,activeWeeklyEntry:null,weekMenu:[],servings:2,
   recipeWeek:"now",offerType:"all",sourceUpdatedAt:null,
+  hfRecipes:[],hfMatches:[],hfSource:null,hfLoaded:false,
   recipeStore:savedPreference(RECIPE_STORE_KEY,"albert_heijn"),
   recipeBranch:savedPreference(RECIPE_BRANCH_KEY,"")
 };
@@ -256,7 +258,75 @@ function renderRecipes(){
 function updateWeeklyMenu(){
   state.weekMenu=buildActionMeals(state.offers,state.recipeStore,todayNL(),7,state.recipeWeek);
   renderRecipes();
+  updateHelloFresh();
 }
+function filteredHelloFresh() {
+  const q=clean(state.recipeQuery),diet=state.diet;
+  return state.hfMatches.filter(e=>{
+    if(diet==="vegan" && e.recipe.diet!=="vegan")return false;
+    if(diet==="vegetarisch" && !["vegan","vegetarisch"].includes(e.recipe.diet))return false;
+    if(["kip","rund","varken","vis"].includes(diet) && e.recipe.diet!==diet)return false;
+    if(diet==="snel" && (e.recipe.minutes===null || e.recipe.minutes>30))return false;
+    return !q || clean(e.recipe.title+" "+e.recipe.ingredients.map(i=>i.name).join(" ")).includes(q);
+  });
+}
+function renderHelloFresh(){
+  const status=$("#hellofresh-status"),grid=$("#hellofresh-grid");
+  const entries=filteredHelloFresh();
+  if(!state.hfLoaded){
+    status.textContent="HelloFresh-receptverwijzingen laden…";grid.innerHTML="";return;
+  }
+  if(!state.hfRecipes.length){
+    status.textContent="Er is nog geen HelloFresh-receptenindex beschikbaar.";
+    grid.innerHTML=msg("HelloFresh-recepten niet beschikbaar",
+      "De koppeling heeft geen gecontroleerde receptverwijzingen ontvangen. Er worden geen willekeurige alternatieven getoond.");
+    return;
+  }
+  status.textContent=entries.length+" HelloFresh-recepten met echte "+weeklyStoreLabel()+
+    "-aanbiedingen voor "+(state.recipeWeek==="now"?"deze week":"volgende week")+
+    " · bron: "+(state.hfSource||"HelloFresh-receptverwijzingen");
+  if(!entries.length){
+    grid.innerHTML=msg("Geen HelloFresh-recepten met passende acties",
+      "De beschikbare recepten hebben momenteel geen aantoonbaar afgeprijsd ingrediënt voor deze supermarkt en filters. Kies een andere week, supermarkt of filter.");
+    return;
+  }
+  grid.innerHTML=entries.map(entry=>{
+    const r=entry.recipe;
+    const matches=entry.matches.slice(0,3).map(m=>'<div class="hellofresh-match"><span>✓ '+
+      html(m.ingredient)+'</span><strong>'+euro(m.offer.price)+'</strong></div>').join("");
+    const ingredients=r.ingredients.slice(0,7).map(i=>html(i.name)).join(" · ");
+    return '<article class="hellofresh-card">'+
+      '<div class="hellofresh-tag">HELLOFRESH · '+html(weeklyStoreLabel())+'</div>'+
+      '<h4>'+html(r.title)+'</h4>'+
+      '<div class="hellofresh-card-meta"><span>'+ (r.minutes?r.minutes+" min":"Tijd op bronsite")+
+      '</span><span>'+entry.matches.length+" bevestigde actie"+(entry.matches.length===1?"":"s")+'</span></div>'+
+      '<div class="hellofresh-matches">'+matches+'</div>'+
+      '<p class="hellofresh-ingredients">Overige ingrediënten op bronsite · '+ingredients+'</p>'+
+      '<div class="hellofresh-actions"><a href="'+html(r.url)+
+      '" target="_blank" rel="noopener noreferrer">Bekijk origineel recept ↗</a>'+
+      '<button type="button" data-hf-add="'+html(r.id)+'">+ Ingrediënten op lijst</button></div>'+
+      '</article>';
+  }).join("");
+}
+function updateHelloFresh(){
+  state.hfMatches=matchHelloFreshRecipes(
+    state.hfRecipes,state.offers,state.recipeStore,todayNL(),state.recipeWeek,30
+  );
+  renderHelloFresh();
+}
+function addHelloFreshIngredients(id){
+  const entry=state.hfMatches.find(e=>e.recipe.id===id);
+  if(!entry)return;
+  const distinct=new Set();
+  for(const ingredient of entry.recipe.ingredients){
+    const name=String(ingredient.name||"").trim();
+    if(!name || distinct.has(clean(name)))continue;
+    distinct.add(clean(name));
+    addItem(name,"hoeveelheid: zie HelloFresh",false);
+  }
+  showToast(distinct.size+" ingrediënten toegevoegd. Controleer de exacte hoeveelheden bij HelloFresh.");
+}
+
 function qtyText(q) {return new Intl.NumberFormat("nl-NL",{maximumFractionDigits:1}).format(q);}
 function openRecipe(id) {
   const entry=state.weekMenu.find(item=>item.recipe.id===id);
@@ -332,6 +402,17 @@ async function loadData(){
     })(),
     (async()=>{
       try{
+        const x=await load("./data/hellofresh.json");
+        state.hfRecipes=sanitizeHelloFreshEntries(x.recipes||[]);
+        state.hfSource=x.apiStatus==="connected"?"HelloFresh Database (geregistreerde API)":"publieke HelloFresh NL-receptverwijzingen";
+      }catch {
+        state.hfRecipes=[];state.hfSource="niet beschikbaar";
+      }finally{
+        state.hfLoaded=true;updateHelloFresh();
+      }
+    })(),
+    (async()=>{
+      try{
         const x=await load("./data/prices.json");
         state.stores=(Array.isArray(x)?x:x.stores||[]).filter(s=>s && s.n && s.c && Array.isArray(s.d));
         $("#prices-updated").textContent=state.stores.length?
@@ -351,9 +432,9 @@ function setupEvents(){
   document.querySelectorAll("[data-diet]").forEach(b=>b.addEventListener("click",()=>{
     state.diet=b.dataset.diet;
     document.querySelectorAll("[data-diet]").forEach(x=>{x.classList.toggle("is-active",x===b);x.setAttribute("aria-pressed",String(x===b));});
-    renderRecipes();
+    renderRecipes();renderHelloFresh();
   }));
-  $("#recipe-search").addEventListener("input",e=>{state.recipeQuery=e.target.value;renderRecipes();});
+  $("#recipe-search").addEventListener("input",e=>{state.recipeQuery=e.target.value;renderRecipes();renderHelloFresh();});
   document.querySelectorAll("[data-recipe-week]").forEach(b=>b.addEventListener("click",()=>{
     state.recipeWeek=b.dataset.recipeWeek;
     updateWeeklyMenu();
@@ -416,6 +497,10 @@ function setupEvents(){
     const o=state.offers.find(x=>x.id===b.dataset.addOffer);
     if(o)addItem(o.name);
   });
+  $("#hellofresh-grid").addEventListener("click",e=>{
+    const b=e.target.closest("[data-hf-add]");
+    if(b)addHelloFreshIngredients(b.dataset.hfAdd);
+  });
   $("#recipes-grid").addEventListener("click",e=>{
     const b=e.target.closest("[data-recipe]");if(b)openRecipe(b.dataset.recipe);
   });
@@ -435,7 +520,7 @@ function setupEvents(){
 function boot(){
   $("#year").textContent=new Date().getFullYear();
   if(!RECIPE_RETAILERS.some(x=>x.code===state.recipeStore))state.recipeStore="albert_heijn";
-  renderList();renderRecipes();setupEvents();loadData();
+  renderList();renderRecipes();renderHelloFresh();setupEvents();loadData();
   if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }
 boot();
