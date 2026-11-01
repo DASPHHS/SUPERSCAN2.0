@@ -3,7 +3,7 @@
 
 Sources:
  - Checkjebon public supermarket dataset (regular prices)
- - PrijsProfeet /products/promotional/all (promotions)
+ - PrijsProfeet public search endpoint /search (active promotions)
 Does not fabricate prices, infer EAN identity or publish future offers.
 Data is published with the Pages artifact, not committed to git every day.
 """
@@ -14,12 +14,10 @@ import json
 import logging
 import os
 import pathlib
-import random
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "data"
@@ -39,10 +37,6 @@ PRICES_URLS = (
     "https://www.checkjebon.nl/data/supermarkets.json",
     "https://raw.githubusercontent.com/supermarkt/checkjebon/main/data/supermarkets.json",
 )
-MAX_PAGES = int(os.environ.get("MAX_PROMOTION_PAGES", "220"))
-PAGE_SIZE = 100
-DELAY = 2.1  # no-key 30/min list endpoints; below the advertised threshold
-RETAILER_LIMIT = 80
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
@@ -108,7 +102,7 @@ def get_prices():
                     if isinstance(p, dict) and isinstance(p.get("n"), str)
                     and valid_price(p.get("p"))
                 ]
-                if rows:
+                if rows and str(store.get("n", "")).lower() in {"ah", "jumbo", "lidl", "hoogvliet", "dirk"}:
                     stores.append({
                         "n": store.get("n"),
                         "c": store.get("c"),
@@ -181,102 +175,91 @@ def percentage(item):
 
 
 def get_offers():
-    """Fetch a useful verified shortlist *quickly*, without walking thousands
-    of promotional rows on every GitHub Pages deployment.
+    """Collect only currently running promos for the five user-selected chains.
 
-    PrijsProfeet documents q=* for browsing all, promotion_status=active
-    and savings_percentage:desc for ranking. Each chain is sampled
-    separately to avoid one chain dominating the homepage.
+    First fetch a broader cross-category selection, then use targeted product
+    searches to make genuine dinner ingredients discoverable. Every item must
+    retain its source, chain, current status and valid date; no invented deals.
     """
     retailers = (
-        "albert_heijn", "jumbo", "lidl", "aldi", "plus", "dirk",
-        "dekamarkt", "hoogvliet", "vomar", "nettorama", "poiesz",
-        "spar", "ekoplaza", "boons_markt", "gewoon_coop", "mcd",
+        "albert_heijn", "lidl", "jumbo", "hoogvliet", "dirk",
     )
-    rows = []
+    # Queries are factual ingredient types, NOT recipe suggestions or samples.
+    ingredient_searches = (
+        "paprika", "tomaat", "spinazie", "courgette", "kip",
+        "aardappelen", "broccoli", "champignons", "pasta", "zalm",
+        "komkommer", "eieren", "linzen", "tofu", "avocado", "wortel",
+        "kikkererwten", "rijst", "prei", "pompoen",
+    )
     seen = set()
-    source_errors = []
-    for index, retailer in enumerate(retailers):
-        if index:
-            time.sleep(0.75)
-        query = urllib.parse.urlencode({
-            "q": "*",
-            "promotion_status": "active",
-            "sort_by": "savings_percentage:desc",
-            "retailer": retailer,
-            "page_size": 75,
-            "page": 1,
-        })
-        url = API_BASE + "/search?" + query
-        try:
-            data = fetch_json(url, attempts=2)
-            products, _ = products_in_page(data)
-            added = 0
-            for item in products:
-                if not isinstance(item, dict) or not is_running(item):
-                    continue
-                if not item.get("name") or not item.get("retailer"):
-                    continue
-                identity = (str(item["retailer"]), str(item.get("product_id") or item.get("name")))
-                if identity in seen:
-                    continue
-                seen.add(identity)
-                rows.append(item)
-                added += 1
-            logging.info("%s: %s verified running offers", retailer, added)
-        except Exception as exc:
-            source_errors.append(f"{retailer}: {exc}")
-            logging.warning("Retailer query failed (%s): %s", retailer, exc)
-
-    # The bulk endpoint is a documented independent fallback. Never invent
-    # offers or copy static historical prices into the current dataset.
-    if not rows:
-        logging.warning("Search returned no current offers; trying promotional endpoint")
-        for page in range(1, 4):
-            url = API_BASE + "/products/promotional/all?" + urllib.parse.urlencode({
-                "page": page, "page_size": PAGE_SIZE,
-            })
+    output = []
+    query_errors = []
+    for retailer in retailers:
+        retailer_rows = []
+        searches = ("*",) + ingredient_searches
+        for i, term in enumerate(searches):
+            # 120/minute on the anonymous search endpoint, slower by design.
+            if output or i:
+                time.sleep(0.58)
+            params = {
+                "q": term,
+                "promotion_status": "active",
+                "retailer": retailer,
+                "sort_by": "savings_percentage:desc",
+                "page_size": 75 if term == "*" else 20,
+                "page": 1,
+            }
             try:
-                data = fetch_json(url, attempts=2)
+                data = fetch_json(API_BASE + "/search?" + urllib.parse.urlencode(params), attempts=2)
+                results, _ = products_in_page(data)
             except Exception as exc:
-                source_errors.append(f"bulk page {page}: {exc}")
-                break
-            products, _ = products_in_page(data)
-            for item in products:
+                query_errors.append(f"{retailer}/{term}: {exc}")
+                logging.warning("Search query %s/%s failed: %s", retailer, term, exc)
+                continue
+            for item in results:
                 if not isinstance(item, dict) or not is_running(item):
                     continue
-                if not item.get("name") or not item.get("retailer"):
+                if not isinstance(item.get("name"), str) or not item["name"].strip():
                     continue
-                identity = (str(item["retailer"]), str(item.get("product_id") or item.get("name")))
+                if item.get("retailer") != retailer:
+                    continue
+                identity = (retailer, str(item.get("product_id") or item["name"]))
                 if identity in seen:
                     continue
                 seen.add(identity)
-                rows.append(item)
-            if len(products) < PAGE_SIZE:
-                break
-            time.sleep(DELAY)
+                retailer_rows.append(item)
 
-    if not rows:
-        raise RuntimeError("No current PrijsProfeet offers retrieved; errors=" + repr(source_errors[:4]))
+        if not retailer_rows:
+            logging.warning("No active offers for %s", retailer)
+        # Prefer actual food ingredients to maximize action-recipes, but keep
+        # the ordinary deals overview useful as well.
+        retailer_rows.sort(key=lambda o: (-percentage(o), str(o.get("name") or "")))
+        output.extend(retailer_rows[:320])
+        logging.info("%s: %s confirmed running products", retailer, len(retailer_rows))
 
-    chosen = sorted(rows, key=lambda p: (-percentage(p), float(p["price"])))
+    if not output:
+        raise RuntimeError("No current offers for five selected chains; errors=" + repr(query_errors[:4]))
+
     fields = (
         "product_id", "id", "name", "retailer", "price", "original_price",
-        "savings_percentage", "promotion_status", "status", "valid_from", "valid_until",
-        "quantity", "category", "unified_category", "image_url", "product_url",
-        "multi_buy_quantity", "multi_buy_price", "loyalty_price", "promotional_keywords",
+        "savings_percentage", "promotion_status", "status", "valid_from",
+        "valid_until", "quantity", "category", "unified_category",
+        "product_url", "multi_buy_quantity", "multi_buy_price",
+        "loyalty_price", "promotional_keywords",
     )
-    slim = [{k: p[k] for k in fields if k in p} for p in chosen]
+    slim = [{key: item[key] for key in fields if key in item} for item in output]
     save("deals.json", {
         "source": "PrijsProfeet",
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
         "offers": slim,
-        "sourceCount": len(rows),
+        "sourceCount": len(output),
+        "retailers": list(retailers),
+        "sampling": "Current offers plus targeted searches for dinner ingredients",
         "partial": True,
-        "sampling": "top 75 live offers per retailer",
-        "sourceErrors": len(source_errors),
+        "sourceErrors": len(query_errors),
+        "chainScope": "National chain offers, not confirmed for individual branches",
     })
-    return len(slim), len(rows)
+    return len(slim), len(output)
 
 
 def main():

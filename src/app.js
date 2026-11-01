@@ -1,8 +1,12 @@
-import { recipes } from "./recipes.js";
+import { dealMatchedRecipes, RECIPE_RETAILERS, weekBounds } from "./weekly.js";
 import { euro, clean, compareProduct, compareBasket, optimizeTwoStores, isActiveOffer, normalizeOffer, safeUrl, todayNL } from "./pricing.js";
 
 const $ = (selector) => document.querySelector(selector);
 const STORAGE_KEY = "superscan-v2-shopping-list";
+const RECIPE_STORE_KEY = "superscan-v2-recipe-store";
+const RECIPE_BRANCH_KEY = "superscan-v2-recipe-branch";
+function savedPreference(key,fallback){try{return localStorage.getItem(key)||fallback;}catch{return fallback;}}
+function storePreference(key,value){try{localStorage.setItem(key,value);}catch{}}
 const STORES = {
   albert_heijn:"Albert Heijn",ah:"Albert Heijn",jumbo:"Jumbo",aldi:"Aldi",lidl:"Lidl",
   plus:"PLUS",dirk:"Dirk",dekamarkt:"DekaMarkt",hoogvliet:"Hoogvliet",vomar:"Vomar",
@@ -11,7 +15,9 @@ const STORES = {
 };
 const state = {
   offers:[],stores:[],list:readList(),dealQuery:"",dealStore:"all",dealSort:"discount",
-  diet:"alles",recipeQuery:"",activeRecipe:null,servings:2
+  diet:"alles",recipeQuery:"",activeRecipe:null,activeWeeklyEntry:null,weekMenu:[],servings:2,
+  recipeStore:savedPreference(RECIPE_STORE_KEY,"albert_heijn"),
+  recipeBranch:savedPreference(RECIPE_BRANCH_KEY,"")
 };
 let toastTimer;
 function html(v) { return String(v ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -163,44 +169,132 @@ function renderBasket(){
 }
 function filteredRecipes(){
   const q=clean(state.recipeQuery);
-  return recipes.filter(r=>{
-    const diet=state.diet;
+  return state.weekMenu.filter(entry=>{
+    const r=entry.recipe, diet=state.diet;
     if(diet==="vegetarisch" && !["vegetarisch","vegan"].includes(r.diet))return false;
     if(diet==="vegan" && !r.vegan)return false;
     if(diet==="vis" && r.diet!=="vis")return false;
     if(diet==="snel" && r.minutes>30)return false;
-    if(q && !clean(r.title+" "+r.description+" "+r.category+" "+r.ingredients.map(i=>i[0]).join(" ")).includes(q))return false;
-    return true;
+    const description=r.title+" "+r.description+" "+r.category+" "+
+      r.ingredients.map(i=>i[0]).join(" ")+" "+
+      entry.matches.map(m=>m.offer.name).join(" ");
+    return !q || clean(description).includes(q);
   });
 }
+function weeklyStoreLabel(){
+  return RECIPE_RETAILERS.find(x=>x.code===state.recipeStore)?.name || "de gekozen supermarkt";
+}
+function showBranchNotice(){
+  const chain=RECIPE_RETAILERS.find(x=>x.code===state.recipeStore);
+  const location=state.recipeBranch.trim();
+  $("#weekly-branch-notice").textContent=(location?
+    "Voorkeursvestiging: "+location+". ":"")+
+    "Deze aanbiedingen gelden volgens de bron op ketenniveau voor "+chain.name+
+    ". Specifieke filiaalprijzen en beschikbaarheid zijn niet gecontroleerd. Controleer ze bij jouw vestiging.";
+}
 function renderRecipes(){
-  const list=filteredRecipes(),el=$("#recipes-grid");
-  if(!list.length){el.innerHTML=msg("Geen recepten gevonden","Probeer een ander ingrediënt of kies een ander filter.");return;}
-  el.innerHTML=list.map(r=>'<article class="recipe-card"><div class="recipe-art '+html(r.tone)+'"><span class="plate" aria-hidden="true">'+r.emoji+'</span><span class="time-tag">◷ '+r.minutes+' min</span></div>'+
-    '<div class="recipe-body"><div class="recipe-kicker">'+html(r.category)+' · '+html(r.vegan?"PLANTAARDIG":r.diet==="vis"?"VIS":r.diet==="kip"?"KIP":"VEGETARISCH")+'</div>'+
-    '<h3>'+html(r.title)+'</h3><p>'+html(r.description)+'</p><div class="recipe-footer"><span>♧ 2 personen · schaalbaar</span>'+
-    '<button data-recipe="'+html(r.id)+'" type="button">Bekijk recept ↗</button></div></div></article>').join("");
+  const el=$("#recipes-grid");
+  const list=filteredRecipes();
+  const range=weekBounds();
+  const fmtDate=s=>new Intl.DateTimeFormat("nl-NL",{day:"numeric",month:"short",timeZone:"UTC"})
+    .format(new Date(s+"T12:00:00Z"));
+  $("#weekly-range").textContent="Week "+fmtDate(range.start)+" – "+fmtDate(range.end);
+  $("#recipe-store").value=state.recipeStore;
+  $("#recipe-branch").value=state.recipeBranch;
+  showBranchNotice();
+  $("#add-week-to-list").disabled=!list.length;
+  const chain=weeklyStoreLabel();
+  $("#weekly-status").textContent=state.offers.length
+    ? state.weekMenu.length+" actiegestuurde recepten voor "+chain+" · "+list.length+" na filters · actuele ketenacties"
+    : "Nog geen actuele aanbiedingsdata geladen: er worden geen willekeurige recepten getoond.";
+  if(!state.weekMenu.length){
+    el.innerHTML=msg("Geen bewezen actierecepten voor "+chain,
+      "Er is nu geen recept met een geverifieerd actie-ingrediënt beschikbaar. Probeer een andere keten of controleer later opnieuw. We tonen bewust geen willekeurige recepten.");
+    return;
+  }
+  if(!list.length){
+    el.innerHTML=msg("Geen actierecepten binnen deze filters",
+      "Verwijder een filter om de andere bewezen actie-recepten te bekijken.");
+    return;
+  }
+  el.innerHTML=list.map(entry=>{
+    const r=entry.recipe;
+    const promo=entry.matches.slice(0,2).map(match=>
+      '<div class="weekly-deal-line"><span class="weekly-deal-check">✓</span>'+
+      '<span><strong>'+html(match.ingredient)+'</strong> · '+html(match.offer.name)+'</span>'+
+      '<b>'+euro(match.offer.price)+'</b></div>').join("");
+    const extra=entry.matches.length>2?'<small>+ '+(entry.matches.length-2)+' andere actie-ingrediënten</small>':"";
+    return '<article class="recipe-card weekly-recipe-card"><div class="recipe-art '+html(r.tone)+
+      '"><span class="plate" aria-hidden="true">'+r.emoji+
+      '</span><span class="time-tag">◷ '+r.minutes+' min</span></div>'+
+      '<div class="recipe-body"><div class="recipe-kicker">'+html(chain)+' · '+html(r.category)+'</div>'+
+      '<h3>'+html(r.title)+'</h3><p>'+html(r.description)+'</p>'+
+      '<div class="weekly-match-count">'+entry.matches.length+' daadwerkelijk gevonden actie'+
+      (entry.matches.length===1?"-ingrediënt":"-ingrediënten")+'</div>'+
+      '<div class="weekly-deal-list">'+promo+extra+'</div>'+
+      '<div class="recipe-footer"><span>2 personen · actie geldig volgens bron</span>'+
+      '<button data-recipe="'+html(r.id)+'" type="button">Bekijk actie & recept ↗</button></div>'+
+      '</div></article>';
+  }).join("");
+}
+function updateWeeklyMenu(){
+  state.weekMenu=dealMatchedRecipes(state.offers,state.recipeStore,todayNL(),7);
+  renderRecipes();
 }
 function qtyText(q) {return new Intl.NumberFormat("nl-NL",{maximumFractionDigits:1}).format(q);}
 function openRecipe(id) {
-  const recipe=recipes.find(r=>r.id===id);if(!recipe)return;
-  state.activeRecipe=recipe;state.servings=2;renderRecipeDialog();
+  const entry=state.weekMenu.find(item=>item.recipe.id===id);
+  if(!entry)return; // Never open a recipe without verified active offer evidence.
+  state.activeWeeklyEntry=entry;
+  state.activeRecipe=entry.recipe;state.servings=2;renderRecipeDialog();
   const dialog=$("#recipe-dialog");
   if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
 }
+function addWeeklyIngredients(){
+  const chosen=filteredRecipes();
+  if(!chosen.length){showToast("Geen bewezen recepten geselecteerd.");return;}
+  const aggregated=new Map();
+  for(const entry of chosen)for(const [name,amount,unit] of entry.recipe.ingredients){
+    const key=clean(name)+"|"+unit;
+    if(!aggregated.has(key))aggregated.set(key,{name,amount:0,unit});
+    aggregated.get(key).amount+=amount;
+  }
+  for(const ingredient of aggregated.values()){
+    addItem(ingredient.name,qtyText(ingredient.amount)+" "+ingredient.unit,false);
+  }
+  showToast(aggregated.size+" gecombineerde ingrediënten voor "+chosen.length+" actierecepten toegevoegd.");
+}
 function renderRecipeDialog(){
-  const r=state.activeRecipe;if(!r)return;
+  const r=state.activeRecipe,entry=state.activeWeeklyEntry;
+  if(!r||!entry)return;
   const factor=state.servings/r.servings;
-  $("#recipe-dialog-content").innerHTML='<div class="dialog-top"><span class="recipe-icon">'+r.emoji+'</span><div class="eyebrow">AVONDRECEPT · '+html(r.category)+'</div>'+
-    '<h2 id="recipe-dialog-title">'+html(r.title)+'</h2><p>◷ '+r.minutes+' min &nbsp; · &nbsp; '+html(r.description)+'</p></div>'+
-    '<div class="dialog-content"><div class="servings-bar"><span>Hoeveel personen?</span><div class="servings-picker">'+
-    '<button type="button" data-serve="-2" aria-label="Minder personen">−</button><strong>'+state.servings+' personen</strong>'+
+  const dealLines=entry.matches.map(m=>{
+    const o=m.offer;
+    const link=safeUrl(o.source);
+    return '<li><strong>'+html(m.ingredient)+'</strong>: '+html(o.name)+
+      ' — <b>'+euro(o.price)+'</b>'+
+      (o.savings?(' ('+Math.round(o.savings)+'% korting)'):'')+
+      (o.valid_until?' · geldig t/m '+html(String(o.valid_until).slice(0,10)):'')+
+      (o.bundleQty&&o.bundlePrice?' · '+html(String(o.bundleQty))+' voor '+euro(Number(o.bundlePrice)):'')+
+      (o.loyalty?' · eventuele ledenprijs geldt apart':'')+
+      (link?' <a target="_blank" rel="noopener noreferrer" href="'+html(link)+'">Bekijk product ↗</a>':'')+
+      '</li>';
+  }).join("");
+  $("#recipe-dialog-content").innerHTML='<div class="dialog-top"><span class="recipe-icon">'+r.emoji+'</span>'+
+    '<div class="eyebrow">ACTIERECEPT · '+html(weeklyStoreLabel())+'</div>'+
+    '<h2 id="recipe-dialog-title">'+html(r.title)+'</h2>'+
+    '<p>◷ '+r.minutes+' min · '+html(r.description)+'</p></div>'+
+    '<div class="dialog-content"><div class="servings-bar"><span>Hoeveel personen?</span>'+
+    '<div class="servings-picker"><button type="button" data-serve="-2" aria-label="Minder personen">−</button>'+
+    '<strong>'+state.servings+' personen</strong>'+
     '<button type="button" data-serve="2" aria-label="Meer personen">+</button></div></div>'+
-    '<h3>Ingrediënten</h3><ul class="ingredient-list">'+r.ingredients.map(i=>
+    '<div class="weekly-evidence"><h3>Deze ingrediënten zijn écht in de aanbieding</h3>'+
+    '<ul>'+dealLines+'</ul><small>Bron: <a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet ↗</a>. Prijzen zijn per aangeboden verpakking, niet per benodigde recepthoeveelheid. Ketenacties zijn niet op filiaalniveau bevestigd.</small></div>'+
+    '<h3>Alle ingrediënten ('+state.servings+' personen)</h3><ul class="ingredient-list">'+r.ingredients.map(i=>
       '<li><span>'+qtyText(i[1]*factor)+' '+html(i[2])+'</span> '+html(i[0])+'</li>').join("")+'</ul>'+
     '<h3>Zo maak je het</h3><ol class="method-list">'+r.steps.map(s=>'<li>'+html(s)+'</li>').join("")+'</ol>'+
     '<div class="dialog-bottom"><button type="button" class="btn btn-lime" id="add-recipe-ingredients">+ Voeg alle ingrediënten toe</button>'+
-    '<p>Allergenen: '+html(r.allergens)+' Controleer altijd productetiketten en eigen dieetbehoeften.</p></div></div>';
+    '<p>Allergenen: '+html(r.allergens)+' Controleer etiketten, verpakkingsmaten en jouw dieetbehoeften.</p></div></div>';
 }
 async function loadData(){
   const load=async path=>{
@@ -215,8 +309,8 @@ async function loadData(){
         state.offers=(Array.isArray(x.offers)?x.offers:[]).map(normalizeOffer)
           .filter(o=>o.name && o.retailer && Number.isFinite(o.price) && isActiveOffer({...o,promotion_status:o.status}));
         $("#deals-updated").textContent=x.generatedAt?"Bijgewerkt "+updateStamp(x.generatedAt):"Wacht op eerste datasynchronisatie";
-        renderStoreFilter();renderDeals();
-      }catch(e){$("#deals-updated").textContent="Bron tijdelijk niet bereikbaar";renderDeals();}
+        renderStoreFilter();renderDeals();updateWeeklyMenu();
+      }catch(e){$("#deals-updated").textContent="Bron tijdelijk niet bereikbaar";renderDeals();updateWeeklyMenu();}
     })(),
     (async()=>{
       try{
@@ -250,6 +344,17 @@ function setupEvents(){
     renderRecipes();
   }));
   $("#recipe-search").addEventListener("input",e=>{state.recipeQuery=e.target.value;renderRecipes();});
+  $("#recipe-store").addEventListener("change",e=>{
+    if(!RECIPE_RETAILERS.some(x=>x.code===e.target.value))return;
+    state.recipeStore=e.target.value;state.recipeBranch="";storePreference(RECIPE_STORE_KEY,state.recipeStore);
+    storePreference(RECIPE_BRANCH_KEY,"");updateWeeklyMenu();
+  });
+  $("#recipe-branch").addEventListener("change",e=>{
+    state.recipeBranch=e.target.value.trim().slice(0,110);
+    storePreference(RECIPE_BRANCH_KEY,state.recipeBranch);
+    showBranchNotice();
+  });
+  $("#add-week-to-list").addEventListener("click",addWeeklyIngredients);
   $("#add-item-form").addEventListener("submit",e=>{e.preventDefault();addItem($("#list-item-input").value);$("#list-item-input").value="";$("#list-item-input").focus();});
   $("#shopping-items").addEventListener("change",e=>{
     const id=e.target.dataset.check;if(!id)return;
@@ -315,6 +420,7 @@ function setupEvents(){
 }
 function boot(){
   $("#year").textContent=new Date().getFullYear();
+  if(!RECIPE_RETAILERS.some(x=>x.code===state.recipeStore))state.recipeStore="albert_heijn";
   renderList();renderRecipes();setupEvents();loadData();
   if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 }

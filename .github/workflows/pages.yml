@@ -41,6 +41,8 @@ jobs:
         env:
           PRIJSPROFEET_API_KEY: ${{ secrets.PRIJSPROFEET_API_KEY }}
         run: python scripts/sync_sources.py
+      - name: Verify weekly recipe coverage per supermarket
+        run: node scripts/report_weekly.mjs
       - name: Assemble Pages artifact
         run: |
           mkdir -p dist
