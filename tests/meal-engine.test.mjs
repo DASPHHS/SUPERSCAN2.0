@@ -193,7 +193,9 @@ test("ready meals, vegetarian alternatives and deli meats never count as uncooke
     ["Kipfilet in champignon roomsaus kant en klaar","kipfilet"],
     ["Rundergehakt vegetarisch 350g","rundergehakt"],
     ["Biefstuk burger in saus","biefstuk"],
-    ["Varkenshaas schnitzel gepaneerd","varkenshaas"]
+    ["Varkenshaas schnitzel gepaneerd","varkenshaas"],
+    ["AH Duitse biefstuk 2 stuks","biefstuk"],
+    ["Jumbo Duitse biefstuk","biefstuk"]
   ];
   for(const [name,key] of bad)
     assert.equal(isWholeIngredientOffer({name,category:"vlees-vis"},{key}),false,name);
