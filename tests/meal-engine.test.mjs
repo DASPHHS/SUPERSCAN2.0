@@ -33,8 +33,6 @@ test("recipes are genuinely tailored: swap promotional ingredients, change meal 
   assert.notDeepEqual(a[0].recipe.ingredients.slice(0,2),b[0].recipe.ingredients.slice(0,2));
 });
 test("expired, future, missing, off-store deals never count",()=>{
-  const offers=[deal("a","Jumbo broccoli",{a:"b"}),deal("b","Jumbo courgette",{status:"upcoming"})];
-  // Real retailer is the third positional argument, not a map.
   assert.deepEqual(buildActionMeals([
     deal("a","Jumbo broccoli"),
     deal("b","Jumbo courgette","jumbo",{status:"upcoming"}),
@@ -76,4 +74,16 @@ test("chicken or fish must itself be on offer alongside a matching vegetable",()
   assert.ok(fish);
   assert.equal(fish.matches[0].offer.id,"a");
   assert.ok(fish.recipe.steps.some(step=>step.includes("vis")));
+});
+
+test("discounted staple plus actual vegetable can generate a dinner",()=>{
+  const menu=buildActionMeals([
+    deal("a","Jumbo broccoli 500g"),
+    deal("b","Jumbo volkoren pasta 500g")
+  ],"jumbo",day);
+  const pasta=menu.find(e=>e.recipe.category==="Volkoren pasta");
+  assert.ok(pasta);
+  assert.deepEqual(pasta.matches.map(m=>m.offer.id).sort(),["a","b"]);
+  assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="volkoren pasta"));
+  assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="broccoli"));
 });
