@@ -1,0 +1,10 @@
+{
+  "name": "superscan-2-0",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nederlandse supermarktprijzen, aanbiedingen, gezonde recepten en lokale boodschappenlijst",
+  "scripts": {
+    "test": "node --test tests/pricing.test.mjs"
+  }
+}
