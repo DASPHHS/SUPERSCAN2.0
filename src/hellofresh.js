@@ -87,14 +87,20 @@ export function sanitizeHelloFreshEntries(records) {
 export function matchHelloFreshRecipes(entries,offers,retailer,today=todayNL(),period="now",limit=12) {
  if(!RECIPE_RETAILERS.some(r=>r.code===retailer))return [];
  const live=(Array.isArray(offers)?offers:[]).filter(o=>o.retailer===retailer && isOfferInPeriod(o,period,today));
+ const validated=sanitizeHelloFreshEntries(entries);
+ const keys=[...new Set(validated.flatMap(r=>r.ingredients.map(i=>i.key).filter(Boolean)))];
+ const byKey=new Map();
+ for(const key of keys){
+   byKey.set(key,live.filter(o=>isWholeIngredientOffer(o,{key}))
+     .sort((a,b)=>(Number(b.savings)||0)-(Number(a.savings)||0) ||
+       String(a.name).localeCompare(String(b.name),"nl")));
+ }
  const matches=[];
- for(const recipe of sanitizeHelloFreshEntries(entries)) {
+ for(const recipe of validated) {
    const hits=[],used=new Set();
    for(const ingr of recipe.ingredients){
      if(!ingr.key)continue;
-     const options=live.filter(o=>!used.has(o.id)&&isWholeIngredientOffer(o,{key:ingr.key}))
-       .sort((a,b)=>(Number(b.savings)||0)-(Number(a.savings)||0) ||
-         String(a.name).localeCompare(String(b.name),"nl"));
+     const options=(byKey.get(ingr.key)||[]).filter(o=>!used.has(o.id));
      if(!options.length)continue;
      const offer=options[0];used.add(offer.id);
      hits.push({ingredient:ingr.name,key:ingr.key,offer});
