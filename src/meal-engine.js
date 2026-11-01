@@ -205,6 +205,8 @@ export function isWholeIngredientOffer(offer, item) {
     if(item.key==="rode paprika" && /paprika[s]?maak|paprika[s]?aus/.test(name))return false;
   }
   if(isProtein) {
+    // Duitse biefstuk is prepared minced meat, not an intact steak.
+    if(item.key==="biefstuk" && /\b(?:duitse biefstuk|tartaar|gevormde biefstuk|biefstuk tartaar)\b/.test(name))return false;
     // An ingredient title alone does not prove a raw cut of meat.
     if(category && !/(vlees|vis|gevogelte|kip|rund|varken|slager|vers|diepvries)/.test(category))return false;
     if(/(?:gemarineerd in saus|in room|kant en klaar|gepaneerd|ovenschotel|stoof|burger|schnitzel|vegan|veggie|vegetarisch|plantaardig|vleesvervanger|vega |gekookt|gerookt|salade|broodbeleg|vleeswaren|plakjes|worst|pat[eé])/.test(name))return false;
