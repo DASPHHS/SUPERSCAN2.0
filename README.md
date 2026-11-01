@@ -8,10 +8,10 @@ SUPERSCAN opent nu met de recepten. De module **maakt complete gerechten vanuit 
 
 1. Synchroniseer lopende promoties van Albert Heijn, Lidl, Jumbo, Hoogvliet en Dirk.
 2. Herken werkelijk afgeprijsde kookingrediënten via gecontroleerde namen en categorieën, niet louter een los woord ergens in een kant-en-klaar product.
-3. Combineer **minimaal twee verschillende geverifieerde actieproducten** tot een passende originele kookmethode: ovenplaat, volkoren pasta, roerbak, curry, wraps, shakshuka, soep of maaltijdsalade. Een afgeprijsde eiwitbron plus afgeprijsde groente is ook mogelijk; net als afgeprijsde pasta/rijst/bonen plus groente.
+3. Combineer **minimaal één aantoonbaar afgeprijsd hoofdingrediënt** tot een passende originele kookmethode: ovenplaat, volkoren pasta, roerbak, curry, wraps, shakshuka, soep of maaltijdsalade. Een afgeprijsde eiwitbron plus afgeprijsde groente is ook mogelijk; net als afgeprijsde pasta/rijst/bonen plus groente.
 4. Vul de rest van de maaltijd aan met normaal geprijsde basisproducten; vermeld deze afzonderlijk in het recept en in de boodschappenlijst. Een actieprijs is per aangeboden verpakking en **niet** de totale recepthoeveelheid of de gegarandeerde kassatotaalprijs.
 5. Toon alleen de geselecteerde, volledig uitgewerkte recepten: ingrediënten voor twee personen (aanpasbaar), bereidingsstappen, allergenenindicatie, bewijs per aanbieding, acties en geldigheidsdatum.
-6. Sorteer deterministisch op relevante acties en onderlinge variatie. Maximaal zeven gerechten; als onvoldoende acties beschikbaar zijn, verschijnen er minder, **nooit kunstmatige vulling**.
+6. Sorteer deterministisch op relevante acties en onderlinge variatie. Maximaal zeven gerechten; recepten met twee of meer passende actieproducten krijgen voorrang. Bij weinig aanbiedingen kan een enkele echte korting op het hoofdingrediënt ook het vertrekpunt zijn, met expliciet normaal geprijsde aanvullingen. **Nooit kunstmatige acties of willekeurige recepten**.
 7. Voeg een los recept of de samengestelde week aan de bewaarde boodschappenlijst toe.
 
 **Vestigingsniveau:** Er is momenteel geen gecontroleerde locatie-specifieke API voor de prijzen van deze vijf winkels. Het veld 'Mijn vestiging' is enkel een lokale voorkeur; recepten komen van **ketenaanbiedingen** en claimen geen filiaalvoorraad. Voor exacte filiaalacties is een nieuwe gelicentieerde vestigingsdatabron nodig.
@@ -25,7 +25,7 @@ Het receptenalgoritme staat in [src/meal-engine.js](src/meal-engine.js); de geco
 - Boodschappenlijst met afvinken, verwijderen, import/export als JSON en automatisch bewaren in de browser (localStorage, zonder account).
 - Vergelijking van complete mandjes; onvolledige matches worden uitsluitend als deelsom weergegeven. Geen prijsramingen verzinnen.
 - Een optimalisatie voor maximaal twee winkels, uitsluitend bij volledige productdekking.
-- Een **actiegestuurde, adaptieve weekplanner** met maximaal 7 complete gerechten per gekozen keten. Een gerecht verschijnt **alleen als minimaal twee afzonderlijke kookingrediënten werkelijk in de aanbieding zijn** bij de gekozen keten en de actie op dit moment loopt. Elk recept toont concreet gevonden actieproducten, prijzen en geldigheid, en kan naar de boodschappenlijst worden toegevoegd. Hele week aan lijst toevoegen combineert identieke ingrediënten.
+- Een **actiegestuurde, adaptieve weekplanner** met maximaal 7 complete gerechten per gekozen keten. Een gerecht verschijnt **alleen als minimaal één bepalend hoofdingrediënt werkelijk in de aanbieding is** bij de gekozen keten en de actie op dit moment loopt. Elk recept toont concreet gevonden actieproducten, prijzen en geldigheid, en kan naar de boodschappenlijst worden toegevoegd. Hele week aan lijst toevoegen combineert identieke ingrediënten.
 - Installatie als eenvoudige PWA en een offline app-shell; prijzen en aanbiedingen worden altijd online geladen.
 
 
@@ -35,7 +35,7 @@ Het receptenalgoritme staat in [src/meal-engine.js](src/meal-engine.js); de geco
 - De website haalt iedere zes uur actuele aanbiedingen bij PrijsProfeet op. Voor receptrelevantie zoekt het script expliciet ook naar groenten, aardappelen, peulvruchten, eieren, pasta, vis en andere concrete ingrediënten. De data is een **selectie**, geen volledig assortiment.
 - De planner selecteert deterministisch uit de originele receptsjablonen. **Een belangrijk ingrediënt moet aantoonbaar in de aanbieding zijn** bij de geselecteerde keten. Recepten zonder passend actiebewijs worden volledig verborgen; er worden nooit dummy-acties of fictieve prijzen getoond.
 - Per recept is te zien **welk ingrediënt**, **welk concreet actieproduct**, **welke prijs** en **welke einddatum** van toepassing zijn. Niet alle ingrediënten zijn in de aanbieding; de app berekent daarom geen verzonnen totale receptprijs of besparing.
-- Maximaal zeven passende gerechten per actieweek, deterministisch samengesteld uit meerdere actieproducten en gevarieerd naar bereidingswijze, zonder toevalsgenerator. Als er minder dan zeven bewezen gerechten zijn, worden ook minder getoond.
+- Maximaal zeven passende gerechten per actieweek, deterministisch samengesteld vanuit controleerbare actieproducten en gevarieerd naar bereidingswijze, zonder toevalsgenerator. Als er minder dan zeven bewezen gerechten zijn, worden ook minder getoond.
 - Kies je supermarkt en vul optioneel je **voorkeursvestiging** in. Dat veld wordt lokaal bewaard, maar de PrijsProfeet-API biedt **geen aantoonbare informatie op fysiek filiaalniveau**. De app toont daarom alleen landelijke ketenaanbiedingen en zegt expliciet dat filiaalbeschikbaarheid en lokale uitzonderingen niet zijn vastgesteld. Echte per-vestiging-prijzen vereisen afzonderlijke winkel- of filiaalgebonden databronnen.
 - De filtering gebeurt telkens opnieuw op de actuele dag in de tijdzone Europa/Amsterdam. Als acties tijdens de week verlopen, verdwijnt het bijbehorende bewijs. Bij geen passende acties toont de planner bewust geen generieke recepten.
 - Gezonde eetprincipes zijn leidend, maar de recepten en specifieke merken zijn niet klinisch of nutritioneel gecertificeerd. Lees allergenen en etiketten zelf.
@@ -101,3 +101,7 @@ Bij uitval van een bron blijven je lokale lijst en de recepten beschikbaar. Actu
 - Weekplanning, voorraadkast, vaste budgetten en betere dealwaardering (onder andere €/kg en bundelacties).
 
 SUPERSCAN is een onafhankelijk project, niet gelieerd aan supermarkten, Checkjebon, PrijsProfeet, HelloFresh of het Voedingscentrum.
+
+### Productherkenning
+
+De receptenkoppeling gebruikt naast ingrediëntnamen ook de PrijsProfeet-categorie en een conservatieve uitsluitlijst. Producten zoals paprikachips, kant-en-klare maaltijdmixen, smoothies of verzorgingsproducten kunnen geen groente/eiwit voor een gerecht zijn. Dit blijft een heuristiek: externe bronclassificaties kunnen onjuist zijn. In dat geval kan SUPERSCAN minder recepten tonen; dat is betrouwbaarder dan een verzonnen match. Tests bevatten daadwerkelijke eerder fout gekoppelde producttitels.
