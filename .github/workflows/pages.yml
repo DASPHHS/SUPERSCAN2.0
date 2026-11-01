@@ -41,6 +41,8 @@ jobs:
         env:
           PRIJSPROFEET_API_KEY: ${{ secrets.PRIJSPROFEET_API_KEY }}
         run: python scripts/sync_sources.py
+      - name: Import complete SpecialeDeals Weekdeals feed
+        run: python scripts/import_specialedeals.py
       - name: Verify weekly recipe coverage per supermarket
         run: node scripts/report_weekly.mjs
       - name: Assemble Pages artifact

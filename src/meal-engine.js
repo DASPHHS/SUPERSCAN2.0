@@ -8,7 +8,7 @@
  * Does NOT imply that every ingredient is discounted, that the shown package
  * price equals a recipe portion, or that national chain prices are local.
  */
-import { matchesRecipeIngredient, RECIPE_RETAILERS } from "./weekly.js";
+import { matchesRecipeIngredient, RECIPE_RETAILERS, weekBounds } from "./weekly.js";
 import { clean, isActiveOffer, todayNL } from "./pricing.js";
 
 const VEG = Object.freeze([
@@ -30,7 +30,14 @@ const VEG = Object.freeze([
 ]);
 
 const PROTEINS = Object.freeze([
-  {key:"kipfilet",label:"kipfilet",unit:"g",amount:250,kind:"chicken"},
+  {key:"kipfilet",label:"kipfilet",unit:"g",amount:280,kind:"chicken"},
+  {key:"kipdijfilet",label:"kipdijfilet",unit:"g",amount:300,kind:"chicken"},
+  {key:"kipdrumsticks",label:"kipdrumsticks",unit:"g",amount:650,kind:"chicken"},
+  {key:"rundergehakt",label:"rundergehakt",unit:"g",amount:250,kind:"beef"},
+  {key:"biefstuk",label:"biefstuk",unit:"g",amount:260,kind:"beef"},
+  {key:"runderreepjes",label:"runderreepjes",unit:"g",amount:250,kind:"beef"},
+  {key:"varkenshaas",label:"varkenshaas",unit:"g",amount:270,kind:"pork"},
+  {key:"varkensfiletlapjes",label:"varkensfiletlapjes",unit:"g",amount:270,kind:"pork"},
   {key:"zalmfilet",label:"zalmfilet",unit:"g",amount:230,kind:"fish"},
   {key:"kabeljauwfilet",label:"kabeljauwfilet",unit:"g",amount:250,kind:"fish"}
 ]);
@@ -178,7 +185,7 @@ const ROLES = Object.freeze({
  * Restrict vegetables to produce-oriented categories when classified; a
  * product with no category must still pass the restrictive title checks.
  */
-const NON_INGREDIENT = /(?:soep|schotel|pastasaus|sausmix|kruiden|specerijen|poeder|chips|wokkels|crackers|snack|snoep|lotion|shower|douche|bodywash|body wash|shampoo|conditioner|verzorging|babyvoeding|babyhapje|witvis rijst|roerbak sensatie|bakplaat mix|dagschotel|maaltijd|falafel|rundervink|schnitzel|burger|roomkaas|pasta mix|rauwkost|smaak|aroma|extract|ketchup|dressing|drank|limonade|thee|sap|chips|crisp|mayo|smoothie|groentesmoothie|geperst|bakaardappeltjes|aardappeltjes|wavy|blends|gevulde eieren|gevuld ei|gekookte eieren)/i;
+const NON_INGREDIENT = /(?:soep|schotel|pastasaus|sausmix|kruiden|specerijen|poeder|chips|wokkels|crackers|snack|snoep|lotion|shower|douche|bodywash|body wash|shampoo|conditioner|verzorging|babyvoeding|babyhapje|witvis rijst|roerbak sensatie|bakplaat mix|dagschotel|maaltijd|falafel|rundervink|schnitzel|burger|roomkaas|pasta mix|rauwkost|smaak|aroma|extract|ketchup|dressing|drank|limonade|thee|sap|chips|crisp|mayo|smoothie|groentesmoothie|geperst|bakaardappeltjes|aardappeltjes|wavy|blends|gevulde eieren|gevuld ei|gekookte eieren|vleeswaren|broodbeleg|gerookte kipfilet|kipfilet beleg|gegaard|voor op brood)/i;
 const NON_FOOD_BRANDS = /\b(?:nivea|dove|doritos|lays|lay s|lu tuc|aviko|knorr|maggi|honig|unox|olvarit|vivera|iglo|pringles|cheetos|cheez|loreal|l oreal)\b/i;
 const PREPARED_FOOD = /\b(?:pure|pulled|aardappel[\s-]?mix|kip[\s-]?mix|tortilla[\s-]?mix|pizza|lasagne|spaghetti bolognese|bami|nasi|salade|bakplaat|soep|quiche|pesto|wraps met|hot dog)\b/i;
 
@@ -198,8 +205,9 @@ export function isWholeIngredientOffer(offer, item) {
     if(item.key==="rode paprika" && /paprika[s]?maak|paprika[s]?aus/.test(name))return false;
   }
   if(isProtein) {
-    if(category && /(persoonlijk|nonfood|schoonmaak|drank|snack|maaltijd|sauzen)/.test(category))return false;
-    if(/(?:gemarineerd in saus|in room|kant en klaar|gepaneerd|ovenschotel|stoof|burger|schnitzel)/.test(name))return false;
+    // An ingredient title alone does not prove a raw cut of meat.
+    if(category && !/(vlees|vis|gevogelte|kip|rund|varken|slager|vers|diepvries)/.test(category))return false;
+    if(/(?:gemarineerd in saus|in room|kant en klaar|gepaneerd|ovenschotel|stoof|burger|schnitzel|vegan|veggie|vegetarisch|plantaardig|vleesvervanger|vega |gekookt|gerookt|salade|broodbeleg|vleeswaren|plakjes|worst|pat[eé])/.test(name))return false;
   }
   // "kikkererwten en lupine mix" is still a usable bean combination; no
   // prepared spicy meals, dips, soups or flavour-labelled snack products.
@@ -208,11 +216,26 @@ export function isWholeIngredientOffer(offer, item) {
 }
 
 /** Produce true only for actual separate product identities. */
-function bestOffers(offers, retailer, today) {
+export function isOfferInPeriod(offer,period="now",today=todayNL()) {
+  if(!offer || !Number.isFinite(Number(offer.price)) || Number(offer.price)<=0)return false;
+  if(period==="now")return isActiveOffer({...offer,promotion_status:offer.status||offer.promotion_status},today);
+  if(period!=="next")return false;
+  const {start,end}=weekBounds(today);
+  const nextStart=new Date(start+"T12:00:00Z"),nextEnd=new Date(end+"T12:00:00Z");
+  nextStart.setUTCDate(nextStart.getUTCDate()+7);
+  nextEnd.setUTCDate(nextEnd.getUTCDate()+7);
+  const from=String(offer.valid_from||"").slice(0,10);
+  const to=String(offer.valid_until||"").slice(0,10);
+  if(!/^\d{4}-\d\d-\d\d$/.test(from)||!/^\d{4}-\d\d-\d\d$/.test(to))return false;
+  const status=offer.status||offer.promotion_status;
+  if(["historical","shelf"].includes(status))return false;
+  return from<=nextEnd.toISOString().slice(0,10) && to>=nextStart.toISOString().slice(0,10);
+}
+function bestOffers(offers, retailer, today, period="now") {
   const live = (offers || []).filter(o =>
     o.retailer === retailer &&
     o.name && Number.isFinite(Number(o.price)) &&
-    isActiveOffer({ ...o, promotion_status:o.status || o.promotion_status }, today)
+    isOfferInPeriod(o,period,today)
   );
   const found = new Map();
   for (const item of [...VEG, ...PROTEINS, ...STAPLE_DEALS]) {
@@ -258,34 +281,64 @@ function makePair(format,a,b,found) {
   };
 }
 function makeProteinDish(protein,veg,found) {
-  const p=found.get(protein.key),v=found.get(veg.key);
-  const fish=protein.kind==="fish";
+  const offer=found.get(protein.key),vegetableOffer=found.get(veg.key);
+  const fish=protein.kind==="fish",chicken=protein.kind==="chicken";
+  const beef=protein.kind==="beef",pork=protein.kind==="pork";
+  const boneIn=protein.key==="kipdrumsticks";
+  const ground=protein.key==="rundergehakt";
+  const strips=protein.key==="runderreepjes";
+  const category=fish?"Vis":chicken?"Kip":beef?"Rundvlees":"Varkensvlees";
+  const minutes=boneIn?60:ground||strips?30:beef||pork?35:chicken?45:35;
+  const title=(fish?"Ovenvis":chicken?"Kip":beef?"Rundvlees":"Varkensvlees")+
+    " met "+veg.label+" en aardappeltjes";
+  const steps=fish?[
+    "Verwarm de oven voor op 200 °C. Snijd de aardappelen klein en rooster ze 15 minuten voor.",
+    "Snijd de "+veg.label+" in kleine stukken en schep met een beetje olie om. Voeg bij de aardappelen.",
+    "Leg de "+protein.label+" erbij en gaar ongeveer 12–18 minuten verder, tot de vis volledig gaar is.",
+    "Controleer of de aardappelen en groenten gaar zijn en serveer met citroen."
+  ]:chicken?[
+    "Verwarm de oven voor op 200 °C. Snijd de aardappelen klein en rooster ze 15 minuten voor.",
+    "Snijd de "+veg.label+" in stukken, voeg die met olijfolie toe aan de bakplaat.",
+    boneIn
+      ?"Leg de kipdrumsticks op de plaat en rooster circa 35–45 minuten verder, afhankelijk van hun grootte. Draai halverwege."
+      :"Voeg de "+protein.label+" toe en rooster circa 20–30 minuten verder, afhankelijk van de dikte.",
+    "Controleer met een vleesthermometer dat de kip in het dikste deel minimaal 75 °C is, zonder het bot te raken. Serveer met citroen."
+  ]:ground?[
+    "Kook of rooster de aardappelen gaar. Snijd de "+veg.label+" in hapklare stukken.",
+    "Bak het rundergehakt in een koekenpan rul en volledig gaar; giet overtollig bakvet af.",
+    "Bak de groenten in een tweede pan met een beetje olie tot ze beetgaar zijn.",
+    "Meng het gehakt met de groenten, breng op smaak met peper en serveer met aardappelen."
+  ]:strips?[
+    "Kook of rooster de aardappelen gaar. Snijd de "+veg.label+" klein.",
+    "Roerbak de "+protein.label+" op middelhoog vuur totdat het vlees gaar is; houd het daarna even apart.",
+    "Roerbak de groenten met een klein beetje olie tot ze beetgaar zijn.",
+    "Schep het vlees terug, warm alles goed door en serveer met de aardappelen."
+  ]:[
+    "Kook of rooster de aardappelen gaar en snijd de "+veg.label+" klein.",
+    "Bak of stoom de groenten met een beetje olie tot ze beetgaar zijn.",
+    "Bak de "+protein.label+" in een koekenpan tot de gewenste, veilige gaarheid; controleer de verpakking voor bereidingstijd en temperatuur.",
+    "Laat het vlees zo nodig kort rusten en serveer met groenten, aardappelen en citroen."
+  ];
   return {
     recipe:{
       id:"actief-protein-"+clean(protein.key)+"-"+clean(veg.key),
-      title:(fish?"Ovenvis":"Kip uit de oven")+" met "+veg.label+" en aardappeltjes",
-      description:v?"Het eiwit én de groente zijn aantoonbaar in de aanbieding.":"Deze complete maaltijd is samengesteld rond een echt afgeprijsd eiwitproduct.",
-      category:fish?"Vis uit de oven":"Ovenkip",diet:fish?"vis":"kip",
-      vegan:false,minutes:fish?35:45,emoji:fish?"🐟":"🍗",tone:fish?"tone-blue":"tone-orange",servings:2,
+      title,description:vegetableOffer
+        ?"Echt afgeprijsd(e) "+protein.label+" en "+veg.label+" vormen de basis van dit gerecht."
+        :"Deze maaltijd begint bij een bevestigde aanbieding voor "+protein.label+".",
+      category,diet:fish?"vis":chicken?"kip":beef?"rund":"varken",
+      vegan:false,minutes,emoji:fish?"🐟":chicken?"🍗":beef?"🥩":"🍖",
+      tone:fish?"tone-blue":chicken?"tone-orange":"tone-gold",servings:2,
       ingredients:[[protein.key,protein.amount,protein.unit],[veg.key,Math.max(350,veg.amount),veg.unit],
         ["vastkokende aardappelen",400,"g"],["citroen",1,"stuk"],["olijfolie",1,"el"]],
-      steps:[
-        "Verwarm de oven voor op 200 °C. Snijd de aardappelen klein en bak ze op een bakplaat 15 minuten voor.",
-        "Snijd de "+veg.label+" in kleine stukken en schep met een beetje olijfolie om. Voeg toe aan de bakplaat.",
-        fish
-          ?"Voeg de vis toe, besprenkel met citroen en gaar 12 tot 18 minuten verder tot de vis volledig gaar is."
-          :"Leg de kipfilet naast de groenten en gaar circa 20 tot 25 minuten verder, totdat de kip volledig door en door gaar is.",
-        "Controleer of alle groenten en aardappelen gaar zijn en serveer direct."
-      ],
-      allergens:fish?"Vis.":"Controleer de productetiketten."
+      steps,allergens:"Controleer de etiketten op allergenen en mogelijke kruisbesmetting."
     },
-    matches:[{ingredient:protein.key,offer:p,major:true},...(v?[{ingredient:veg.key,offer:v,major:true}]:[])],
-    main:v?2:1,
-    score:(v?240:90)+(Number(p.savings)||0)+(Number(v?.savings)||0),
-    method:"protein",pair:[protein.key,veg.key].sort().join("|")
+    matches:[{ingredient:protein.key,offer,major:true},...(vegetableOffer?[{ingredient:veg.key,offer:vegetableOffer,major:true}]:[])],
+    main:vegetableOffer?2:1,
+    score:(vegetableOffer?460:365)+(Number(offer.savings)||0)+(Number(vegetableOffer?.savings)||0),
+    method:"protein-"+protein.kind,
+    pair:[protein.key,veg.key].sort().join("|")
   };
 }
-
 function makeStapleDish(format,a,b,staple,found) {
   const vegOffer=found.get(a.key),stapleOffer=found.get(staple.key);
   return {
@@ -332,9 +385,9 @@ function makeSingleSourceDish(format,a,b,found,sourceKey) {
 }
 
 /** 0..7 deterministic actual-offer dinners, with no unproven filler. */
-export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
+export function buildActionMeals(offers, retailer, today=todayNL(), limit=7, period="now") {
   if (!RECIPE_RETAILERS.some(r=>r.code===retailer)) return [];
-  const found=bestOffers(offers,retailer,today);
+  const found=bestOffers(offers,retailer,today,period);
   const candidates=[];
   for (const format of FORMATS) {
     const available=VEG.filter(v=>v.roles.includes(format.id) &&
@@ -369,7 +422,7 @@ export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
       if(found.get(p.key).id===found.get(v.key).id)continue;
       candidates.push(makeProteinDish(p,v,found));
     }
-    // A genuinely discounted fish/chicken remains a valid recipe starting
+    // A genuinely discounted meat/fish product remains a valid recipe starting
     // point even when no fresh vegetable is reduced that week.
     const regularVeg=VEG.find(x=>x.key==="broccoli" && !found.has(x.key)) ||
       VEG.find(x=>x.key==="courgette" && !found.has(x.key));

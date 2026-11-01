@@ -17,6 +17,7 @@ const STORES = {
 const state = {
   offers:[],stores:[],list:readList(),dealQuery:"",dealStore:"all",dealSort:"discount",
   diet:"alles",recipeQuery:"",activeRecipe:null,activeWeeklyEntry:null,weekMenu:[],servings:2,
+  recipeWeek:"now",offerType:"all",sourceUpdatedAt:null,
   recipeStore:savedPreference(RECIPE_STORE_KEY,"albert_heijn"),
   recipeBranch:savedPreference(RECIPE_BRANCH_KEY,"")
 };
@@ -111,6 +112,9 @@ function renderDeals(){
   let offers=state.offers.filter(o=>isActiveOffer({...o,price:o.price,promotion_status:o.status},todayNL()) && o.name);
   if(state.dealStore!=="all")offers=offers.filter(o=>o.retailer===state.dealStore);
   if(q)offers=offers.filter(o=>clean(o.name+" "+o.category+" "+storeLabel(o.retailer)).includes(q));
+  if(state.offerType==="bundle")offers=offers.filter(o=>Number(o.bundleQty)>=2);
+  else if(state.offerType==="loyalty")offers=offers.filter(o=>Number(o.loyalty)>0);
+  else if(state.offerType==="single")offers=offers.filter(o=>!(Number(o.bundleQty)>=2)&&!(Number(o.loyalty)>0));
   if(state.dealSort==="discount")offers.sort((a,b)=>b.savings-a.savings || a.price-b.price);
   else if(state.dealSort==="price")offers.sort((a,b)=>a.price-b.price);
   else offers.sort((a,b)=>String(a.valid_until||"9999").localeCompare(String(b.valid_until||"9999")));
@@ -174,7 +178,7 @@ function filteredRecipes(){
     const r=entry.recipe, diet=state.diet;
     if(diet==="vegetarisch" && !["vegetarisch","vegan"].includes(r.diet))return false;
     if(diet==="vegan" && !r.vegan)return false;
-    if(diet==="vis" && r.diet!=="vis")return false;
+    if(["vis","kip","rund","varken"].includes(diet) && r.diet!==diet)return false;
     if(diet==="snel" && r.minutes>30)return false;
     const description=r.title+" "+r.description+" "+r.category+" "+
       r.ingredients.map(i=>i[0]).join(" ")+" "+
@@ -197,20 +201,31 @@ function renderRecipes(){
   const el=$("#recipes-grid");
   const list=filteredRecipes();
   const range=weekBounds();
+  if(state.recipeWeek==="next"){
+    const shift=s=>{const d=new Date(s+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+7);return d.toISOString().slice(0,10);};
+    range.start=shift(range.start);range.end=shift(range.end);
+  }
   const fmtDate=s=>new Intl.DateTimeFormat("nl-NL",{day:"numeric",month:"short",timeZone:"UTC"})
     .format(new Date(s+"T12:00:00Z"));
-  $("#weekly-range").textContent="Week "+fmtDate(range.start)+" – "+fmtDate(range.end);
+  $("#weekly-range").textContent=(state.recipeWeek==="next"?"Volgende week ":"Deze week ")+fmtDate(range.start)+" – "+fmtDate(range.end);
+  document.querySelectorAll("[data-recipe-week]").forEach(b=>{
+    const active=b.dataset.recipeWeek===state.recipeWeek;
+    b.classList.toggle("is-active",active);b.setAttribute("aria-pressed",String(active));
+  });
+  $("#recipe-source-stamp").textContent=state.sourceUpdatedAt
+    ?"Aanbiedingen via PrijsProfeet (SpecialeDeals) · bron bijgewerkt "+updateStamp(state.sourceUpdatedAt)+" · ketenaanbiedingen"
+    :"Nog geen bijgewerkte aanbiedingsgegevens beschikbaar";
   $("#recipe-store").value=state.recipeStore;
   $("#recipe-branch").value=state.recipeBranch;
   showBranchNotice();
   $("#add-week-to-list").disabled=!list.length;
   const chain=weeklyStoreLabel();
   $("#weekly-status").textContent=state.offers.length
-    ? state.weekMenu.length+" maaltijden samengesteld uit actuele acties bij "+chain+" · "+list.length+" na je filters"
+    ? state.weekMenu.length+" maaltijden op basis van "+(state.recipeWeek==="next"?"aangekondigde":"lopende")+" acties bij "+chain+" · "+list.length+" na filters"
     : "Nog geen actuele aanbiedingsdata geladen: er worden geen willekeurige recepten getoond.";
   if(!state.weekMenu.length){
     el.innerHTML=msg("Geen bewezen actierecepten voor "+chain,
-      "Er zijn nu te weinig afzonderlijke, bevestigde voedselacties om een complete maaltijd te maken. Probeer een andere supermarkt; we vullen nooit aan met willekeurige recepten.");
+      "Er is voor deze week geen passend, gecontroleerd hoofdingrediënt gevonden. Probeer een andere supermarkt of week. We tonen geen willekeurige recepten.");
     return;
   }
   if(!list.length){
@@ -233,13 +248,13 @@ function renderRecipes(){
       '<div class="weekly-match-count">'+entry.matches.length+' gecontroleerde actie'+
       (entry.matches.length===1?"-ingrediënt":"-ingrediënten")+'</div>'+
       '<div class="weekly-deal-list">'+promo+extra+'</div>'+
-      '<div class="recipe-footer"><span>2 personen · actie geldig volgens bron</span>'+
+      '<div class="recipe-footer"><span>2 personen · data volgens bron</span>'+
       '<button data-recipe="'+html(r.id)+'" type="button">Bekijk actie & recept ↗</button></div>'+
       '</div></article>';
   }).join("");
 }
 function updateWeeklyMenu(){
-  state.weekMenu=buildActionMeals(state.offers,state.recipeStore,todayNL(),7);
+  state.weekMenu=buildActionMeals(state.offers,state.recipeStore,todayNL(),7,state.recipeWeek);
   renderRecipes();
 }
 function qtyText(q) {return new Intl.NumberFormat("nl-NL",{maximumFractionDigits:1}).format(q);}
@@ -275,7 +290,8 @@ function renderRecipeDialog(){
     return '<li><strong>'+html(m.ingredient)+'</strong>: '+html(o.name)+
       ' — <b>'+euro(o.price)+'</b>'+
       (o.savings?(' ('+Math.round(o.savings)+'% korting)'):'')+
-      (o.valid_until?' · geldig t/m '+html(String(o.valid_until).slice(0,10)):'')+
+      (o.valid_from?' · vanaf '+html(String(o.valid_from).slice(0,10)):'')+
+      (o.valid_until?' · t/m '+html(String(o.valid_until).slice(0,10)):'')+
       (o.bundleQty&&o.bundlePrice?' · '+html(String(o.bundleQty))+' voor '+euro(Number(o.bundlePrice)):'')+
       (o.loyalty?' · eventuele ledenprijs geldt apart':'')+
       (link?' <a target="_blank" rel="noopener noreferrer" href="'+html(link)+'">Bekijk product ↗</a>':'')+
@@ -308,8 +324,9 @@ async function loadData(){
       try{
         const x=await load("./data/deals.json");
         state.offers=(Array.isArray(x.offers)?x.offers:[]).map(normalizeOffer)
-          .filter(o=>o.name && o.retailer && Number.isFinite(o.price) && isActiveOffer({...o,promotion_status:o.status}));
-        $("#deals-updated").textContent=x.generatedAt?"Bijgewerkt "+updateStamp(x.generatedAt):"Wacht op eerste datasynchronisatie";
+          .filter(o=>o.name && o.retailer && Number.isFinite(o.price));
+        state.sourceUpdatedAt=x.sourceUpdatedAt||x.generatedAt||null;
+        $("#deals-updated").textContent=state.sourceUpdatedAt?"Bijgewerkt "+updateStamp(state.sourceUpdatedAt):"Wacht op eerste datasynchronisatie";
         renderStoreFilter();renderDeals();updateWeeklyMenu();
       }catch(e){$("#deals-updated").textContent="Bron tijdelijk niet bereikbaar";renderDeals();updateWeeklyMenu();}
     })(),
@@ -329,6 +346,7 @@ function setupEvents(){
   $("#deals-search").addEventListener("input",e=>{state.dealQuery=e.target.value;renderDeals();});
   $("#store-filter").addEventListener("change",e=>{state.dealStore=e.target.value;renderDeals();});
   $("#deals-sort").addEventListener("change",e=>{state.dealSort=e.target.value;renderDeals();});
+  $("#offer-type").addEventListener("change",e=>{state.offerType=e.target.value;renderDeals();});
   $("#compare-form").addEventListener("submit",e=>{e.preventDefault();renderCompare($("#compare-query").value);});
   document.querySelectorAll("[data-diet]").forEach(b=>b.addEventListener("click",()=>{
     state.diet=b.dataset.diet;
@@ -336,6 +354,10 @@ function setupEvents(){
     renderRecipes();
   }));
   $("#recipe-search").addEventListener("input",e=>{state.recipeQuery=e.target.value;renderRecipes();});
+  document.querySelectorAll("[data-recipe-week]").forEach(b=>b.addEventListener("click",()=>{
+    state.recipeWeek=b.dataset.recipeWeek;
+    updateWeeklyMenu();
+  }));
   $("#recipe-store").addEventListener("change",e=>{
     if(!RECIPE_RETAILERS.some(x=>x.code===e.target.value))return;
     state.recipeStore=e.target.value;state.recipeBranch="";storePreference(RECIPE_STORE_KEY,state.recipeStore);
