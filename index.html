@@ -22,47 +22,86 @@
     <header class="topbar">
       <a class="brand" href="#home" aria-label="SUPERSCAN startpagina"><span class="brand-mark" aria-hidden="true">S<span>.</span></span><span class="brand-type">SUPER<span>SCAN</span><small>2.0</small></span></a>
       <nav class="nav desktop-nav" aria-label="Hoofdnavigatie">
+        <a href="#recepten">Weekrecepten</a>
         <a href="#aanbiedingen">Aanbiedingen</a>
-        <a href="#vergelijken">Prijsvergelijker</a>
-        <a href="#recepten">Recepten</a>
+        <a href="#lijst">Boodschappenlijst</a>
       </nav>
       <a href="#lijst" class="top-list-link"><span class="icon" aria-hidden="true">▤</span> Mijn lijst <span class="count-pill" id="nav-count">0</span></a>
     </header>
     <main id="main">
-      <section id="home" class="hero">
-        <div class="hero-glow"></div>
-        <div class="hero-copy">
-          <div class="eyebrow hero-eyebrow"><span class="pulse"></span> JOUW SLIMME BOODSCHAPPENASSISTENT</div>
-          <h1>Meer besparen.<br><em>Beter eten.</em><br>Slimmer kiezen.</h1>
-          <p>Alle aanbiedingen op één plek. Vergelijk je complete boodschappenlijst en bekijk gezonde weekrecepten die aantoonbaar bij de lopende acties passen.</p>
-          <form id="hero-search" class="hero-search" role="search">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <label class="sr-only" for="hero-query">Zoek producten of aanbiedingen</label>
-            <input id="hero-query" name="q" placeholder="Zoek bijvoorbeeld koffie, pasta, bananen..." autocomplete="off" required>
-            <button type="submit" class="btn btn-lime">Zoeken <span aria-hidden="true">↗</span></button>
-          </form>
-          <div class="hero-suggestions"><span>Populair:</span><button type="button" data-quick="koffie">Koffie</button><button type="button" data-quick="melk">Melk</button><button type="button" data-quick="pasta">Pasta</button></div>
+      <section id="home" class="meal-first-hero">
+        <div class="meal-first-hero-copy">
+          <div class="eyebrow hero-eyebrow"><span class="pulse"></span> JOUW AVONDETEN, GEPLAND MET ACTIES</div>
+          <h1>Wat eten we <em>deze week?</em></h1>
+          <p>Maak van de supermarkt-aanbiedingen je weekmenu. Wij combineren échte actieproducten tot complete, gezonde avondmaaltijden — met bereidingswijze én boodschappenlijst.</p>
+          <div class="meal-hero-facts"><span>✓ 5 supermarkten</span><span>✓ Minimaal 2 acties per recept</span><span>✓ Elke week vernieuwd</span></div>
+          <div class="meal-hero-cta"><a class="btn btn-lime" href="#recepten">Bekijk jouw weekmenu <span aria-hidden="true">↗</span></a><a class="hero-quiet-link" href="#zo-werkt-het">Hoe het werkt ↓</a></div>
+          <p class="meal-hero-note">Albert Heijn · Lidl · Jumbo · Hoogvliet · Dirk</p>
         </div>
-        <div class="hero-art" aria-hidden="true">
-          <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
-          <div class="hero-bag"><span class="bag-handle"></span><span class="bag-logo">S<span>.</span></span></div>
-          <span class="hero-food food-1">🥑</span><span class="hero-food food-2">🥦</span><span class="hero-food food-3">🍋</span><span class="hero-food food-4">🥕</span>
-          <div class="floating-card float-top"><span class="floating-icon">↘</span><strong>Deals ontdekken</strong><small>Actueel &amp; overzichtelijk</small></div>
-          <div class="floating-card float-bottom"><span class="floating-icon">✓</span><strong>Jouw lijst, jouw regels</strong><small>Altijd bij de hand</small></div>
+        <div class="meal-first-hero-visual" aria-hidden="true">
+          <div class="visual-ring"></div>
+          <div class="meal-visual-plate"><span class="plate-food">🥘</span><span class="plate-leaf">✳</span></div>
+          <div class="visual-ingredient visual-tomato">🍅</div>
+          <div class="visual-ingredient visual-broccoli">🥦</div>
+          <div class="visual-ingredient visual-lemon">🍋</div>
+          <div class="visual-mini-tag mini-tag-one"><span>✓</span> Met actuele acties</div>
+          <div class="visual-mini-tag mini-tag-two"><span>▤</span> Boodschappenlijst inbegrepen</div>
         </div>
-        <div class="hero-bottom"><span><span class="dot"></span> Data met bronvermelding</span><span>Geen account nodig</span><span>Boodschappenlijst lokaal opgeslagen</span></div>
       </section>
 
+      <section id="recepten" class="content-section recipes-section">
+        <div class="section-header">
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> KOKEN MET WAT ÉCHT IN DE AANBIEDING IS</div><h2>Jouw <span>weekmenu.</span></h2><p>Een maaltijd verschijnt alleen wanneer er minstens twee echte actieproducten zijn gevonden. Kies je supermarkt en bepaal wat er op tafel komt.</p></div>
+          <span class="outline-badge">2+ bevestigde actieproducten per maaltijd</span>
+        </div>
+        <div class="weekly-picker" id="zo-werkt-het">
+          <div class="weekly-picker-top">
+            <div><span class="weekly-kicker">KIES JOUW SUPERMARKT</span><strong>Jouw week. Jouw acties.</strong></div>
+            <span id="weekly-range" class="weekly-range">Deze actieweek</span>
+          </div>
+          <div class="weekly-picker-controls">
+            <label>Supermarktketen
+              <select id="recipe-store">
+                <option value="albert_heijn">Albert Heijn</option>
+                <option value="lidl">Lidl</option>
+                <option value="jumbo">Jumbo</option>
+                <option value="hoogvliet">Hoogvliet</option>
+                <option value="dirk">Dirk</option>
+              </select>
+            </label>
+            <label>Mijn vestiging <small>(optioneel, op dit apparaat)</small>
+              <input id="recipe-branch" maxlength="110" placeholder="Bijv. Jumbo Binnenrotte, Rotterdam" autocomplete="off">
+            </label>
+          </div>
+          <p class="branch-disclaimer" id="weekly-branch-notice">Recepten worden per keten samengesteld. Dit zijn ketenaanbiedingen; specifieke filiaalvoorraad of lokale afwijkingen zijn niet bevestigd.</p>
+        </div>
+        <div class="recipe-filters" role="group" aria-label="Filter actierecepten">
+          <button class="filter-chip is-active" type="button" data-diet="alles" aria-pressed="true">Alle actie-recepten</button>
+          <button class="filter-chip" type="button" data-diet="vegetarisch" aria-pressed="false">Vegetarisch</button>
+          <button class="filter-chip" type="button" data-diet="vegan" aria-pressed="false">Vegan</button>
+          <button class="filter-chip" type="button" data-diet="vis" aria-pressed="false">Met vis</button>
+          <button class="filter-chip" type="button" data-diet="snel" aria-pressed="false">Binnen 30 min</button>
+          <label class="recipe-search"><span class="sr-only">Zoek recepten en actie-ingrediënten</span><input id="recipe-search" placeholder="Zoek gerecht of ingrediënt…"><span aria-hidden="true">⌕</span></label>
+        </div>
+        <div class="weekly-status-row"><p id="weekly-status" role="status" aria-live="polite">We combineren actuele groente-, eiwit- en overige acties tot complete avondmaaltijden…</p><button id="add-week-to-list" type="button" class="outline-button" disabled>+ Voeg alle weekingrediënten toe</button></div>
+        <div id="recipes-grid" class="recipes-grid" aria-live="polite"></div>
+        <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Transparant over kortingen:</strong> een getoond actieproduct is daadwerkelijk gevonden in de actuele bron van de gekozen keten. Andere ingrediënten kunnen de normale prijs hebben; er wordt geen fictieve recept- of weekprijs berekend. Actiedata kunnen tijdens de week verlopen en regionale verschillen zijn mogelijk. Bron: <a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet ↗</a>. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Gezonde voedingsrichtlijnen ↗</a>.</p></div>
+      </section>
+
+
       <section class="value-strip" aria-label="Wat kun je met Superscan?">
-        <div><span class="strip-symbol">%</span><strong>Alle deals</strong><small>Acties met geldigheidsdatum</small></div>
+        <div><span class="strip-symbol">✳</span><strong>Recepten op basis van acties</strong><small>Minstens 2 echte deals per gerecht</small></div>
         <div><span class="strip-symbol">≋</span><strong>Vergelijk winkels</strong><small>Prijs &amp; dekking inzichtelijk</small></div>
         <div><span class="strip-symbol">▤</span><strong>Bewaar je lijst</strong><small>Ook na het sluiten van je browser</small></div>
-        <div><span class="strip-symbol">✳</span><strong>Koken met acties</strong><small>Geen willekeurige recepten</small></div>
+        <div><span class="strip-symbol">✓</span><strong>Bewijs per ingrediënt</strong><small>Prijs en actiedatum zichtbaar</small></div>
       </section>
 
       <section id="aanbiedingen" class="content-section">
         <div class="section-header">
-          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> SLIM KOPEN</div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen en bekijk wanneer een actie afloopt.</p></div>
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> AANVULLEND OP JE WEEKMENU</div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen en bekijk wanneer een actie afloopt.</p></div>
+          <div class="live-badge"><span class="pulse"></span><span id="deals-updated">Brongegevens laden…</span></div>
+        </div>
+        <div class="toolbar"></div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen en bekijk wanneer een actie afloopt.</p></div>
           <div class="live-badge"><span class="pulse"></span><span id="deals-updated">Brongegevens laden…</span></div>
         </div>
         <div class="toolbar">
@@ -87,45 +126,6 @@
           <p class="fineprint" id="prices-updated">Prijzen worden ingeladen. Productmatches zijn indicatief en kunnen qua merk of verpakking verschillen.</p>
           <div class="compare-results" id="compare-results" aria-live="polite"><div class="hint-panel"><span class="hint-icon">↗</span><div><strong>Begin met een product</strong><p>Je ziet per winkel een gevonden product, verpakking en prijs — zonder geschatte prijzen.</p></div></div></div>
         </div>
-      </section>
-
-      <section id="recepten" class="content-section recipes-section">
-        <div class="section-header">
-          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> WEEKMENU OP BASIS VAN ECHTE ACTIES</div><h2>Wat koken we <span>deze week?</span></h2><p>Geen willekeurige recepten: uitsluitend gerechten met een aantoonbaar actueel aanbieding-ingrediënt van jouw supermarkt.</p></div>
-          <span class="outline-badge">Gezonde, zelf samengestelde avondmaaltijden</span>
-        </div>
-        <div class="weekly-picker">
-          <div class="weekly-picker-top">
-            <div><span class="weekly-kicker">KIES JOUW SUPERMARKT</span><strong>Jouw week. Jouw acties.</strong></div>
-            <span id="weekly-range" class="weekly-range">Deze actieweek</span>
-          </div>
-          <div class="weekly-picker-controls">
-            <label>Supermarktketen
-              <select id="recipe-store">
-                <option value="albert_heijn">Albert Heijn</option>
-                <option value="lidl">Lidl</option>
-                <option value="jumbo">Jumbo</option>
-                <option value="hoogvliet">Hoogvliet</option>
-                <option value="dirk">Dirk</option>
-              </select>
-            </label>
-            <label>Mijn vestiging <small>(optioneel, op dit apparaat)</small>
-              <input id="recipe-branch" maxlength="110" placeholder="Bijv. Jumbo Binnenrotte, Rotterdam" autocomplete="off">
-            </label>
-          </div>
-          <p class="branch-disclaimer" id="weekly-branch-notice">Acties komen uit ketenbrede brongegevens. Filiaalvoorraad en lokale afwijkingen zijn niet bevestigd. Controleer de aanbieding bij je gekozen vestiging.</p>
-        </div>
-        <div class="recipe-filters" role="group" aria-label="Filter actierecepten">
-          <button class="filter-chip is-active" type="button" data-diet="alles" aria-pressed="true">Alle actie-recepten</button>
-          <button class="filter-chip" type="button" data-diet="vegetarisch" aria-pressed="false">Vegetarisch</button>
-          <button class="filter-chip" type="button" data-diet="vegan" aria-pressed="false">Vegan</button>
-          <button class="filter-chip" type="button" data-diet="vis" aria-pressed="false">Met vis</button>
-          <button class="filter-chip" type="button" data-diet="snel" aria-pressed="false">Binnen 30 min</button>
-          <label class="recipe-search"><span class="sr-only">Zoek recepten en actie-ingrediënten</span><input id="recipe-search" placeholder="Zoek gerecht of ingrediënt…"><span aria-hidden="true">⌕</span></label>
-        </div>
-        <div class="weekly-status-row"><p id="weekly-status" role="status" aria-live="polite">Acties ophalen en recepten samenstellen…</p><button id="add-week-to-list" type="button" class="outline-button" disabled>+ Voeg alle weekingrediënten toe</button></div>
-        <div id="recipes-grid" class="recipes-grid" aria-live="polite"></div>
-        <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Transparant over kortingen:</strong> een getoond actieproduct is daadwerkelijk gevonden in de actuele bron van de gekozen keten. Andere ingrediënten kunnen de normale prijs hebben; er wordt geen fictieve recept- of weekprijs berekend. Actiedata kunnen tijdens de week verlopen en regionale verschillen zijn mogelijk. Bron: <a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet ↗</a>. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Gezonde voedingsrichtlijnen ↗</a>.</p></div>
       </section>
 
       <section id="lijst" class="content-section list-section">
