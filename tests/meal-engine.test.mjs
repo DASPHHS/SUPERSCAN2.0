@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {buildActionMeals} from "../src/meal-engine.js";
+import {buildActionMeals,isWholeIngredientOffer} from "../src/meal-engine.js";
 
 const day="2026-11-02";
 const deal=(id,name,retailer="jumbo",extra={})=>({
@@ -86,4 +86,52 @@ test("discounted staple plus actual vegetable can generate a dinner",()=>{
   assert.deepEqual(pasta.matches.map(m=>m.offer.id).sort(),["a","b"]);
   assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="volkoren pasta"));
   assert.ok(pasta.recipe.ingredients.some(i=>i[0]==="broccoli"));
+});
+
+test("real-world grocery provider false-positive titles are never cooking ingredients",()=>{
+  const bad=[
+    ["Unox Paprika tomatensoep","rode paprika"],
+    ["NIVEA Care shower orange & avocado oil","avocado"],
+    ["AH Ovenschotel kipfilet champignon room","kipfilet"],
+    ["Knorr Good potatoes broccoli en kaas","broccoli"],
+    ["Knorr Wortel wraps met 35% wortel","wortel"],
+    ["Olvarit Courgette witvis rijst 8m+","courgette"],
+    ["AH Pastasaus spinazie roomkaas","verse spinazie"],
+    ["AH Rauwkost komkommer","komkommer"],
+    ["DORITOS pure paprika","rode paprika"],
+    ["Honig Bakplaat Mix Aardappel, Broccoli & Rundervink","broccoli"],
+    ["Vivera Vegetarische Spinazie Kaas Filet","verse spinazie"],
+    ["Falafel Tomaat/Paprika","rode paprika"],
+    ["Iglo Roerbak Sensatie Pasta Kipfilet Boursin","kipfilet"],
+    ["Lay's Wokkels Paprika","rode paprika"],
+    ["Maggi Dagschotel broccoli kaas","broccoli"],
+    ["Lu Tuc paprika","rode paprika"],
+    ["Bieze Rauwkost komkommer","komkommer"]
+  ];
+  for(const [name,key] of bad){
+    assert.equal(isWholeIngredientOffer({name,category:""}, {key}),false,name);
+  }
+});
+test("whole produce, raw proteins and legumes remain eligible",()=>{
+  const good=[
+    ["AH Broccoli 500 g","broccoli","groente-fruit"],
+    ["Jumbo Biologische Pompoen","pompoenblokjes","groente-fruit"],
+    ["Verse zalmfilet op huid","zalmfilet","vlees-vis"],
+    ["Bonduelle Kikkererwten 2 mini's","kikkererwten","conserven"],
+    ["Jumbo Avocado Eetrijp 2 Stuks","avocado","groente-fruit"],
+    ["Jumbo Volkoren pasta 500 g","volkoren pasta","pasta-rijst"]
+  ];
+  for(const [name,key,category] of good){
+    assert.equal(isWholeIngredientOffer({name,category}, {key}),true,name);
+  }
+});
+test("ready foods cannot create false two-offer recipes",()=>{
+  const bad=[
+    deal("a","Lay's Wokkels Paprika"),
+    deal("b","Unox Pompoen rode linzensoep"),
+    deal("c","NIVEA Care shower orange & avocado oil"),
+    deal("d","Honig Bakplaat Mix Aardappel, Broccoli & Rundervink"),
+    deal("e","Vivera Vegetarische Spinazie Kaas Filet")
+  ];
+  assert.deepEqual(buildActionMeals(bad,"jumbo",day),[]);
 });

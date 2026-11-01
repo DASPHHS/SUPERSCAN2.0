@@ -170,6 +170,43 @@ const ROLES = Object.freeze({
   salad: ["rode paprika","gele paprika","cherrytomaten","komkommer","avocado","romainesla","rode ui"]
 });
 
+/**
+ * Prevent ingredient name fragments in soup, chips, prepared meals, cosmetics,
+ * seasoning mixes or infant foods from masquerading as raw cooking ingredients.
+ *
+ * Categories are supplied by PrijsProfeet (unified_category -> category).
+ * Restrict vegetables to produce-oriented categories when classified; a
+ * product with no category must still pass the restrictive title checks.
+ */
+const NON_INGREDIENT = /(?:soep|schotel|pastasaus|sausmix|kruiden|specerijen|poeder|chips|wokkels|crackers|snack|snoep|lotion|shower|douche|bodywash|body wash|shampoo|conditioner|verzorging|babyvoeding|babyhapje|witvis rijst|roerbak sensatie|bakplaat mix|dagschotel|maaltijd|falafel|rundervink|schnitzel|burger|roomkaas|pasta mix|rauwkost|smaak|aroma|extract|ketchup|dressing|drank|limonade|thee|sap|chips|crisp|mayo)/i;
+const NON_FOOD_BRANDS = /\b(?:nivea|dove|doritos|lays|lay s|lu tuc|knorr|maggi|honig|unox|olvarit|vivera|iglo|pringles|cheetos|cheez|loreal|l oreal)\b/i;
+const PREPARED_FOOD = /\b(?:pure|pulled|aardappel[\s-]?mix|kip[\s-]?mix|tortilla[\s-]?mix|pizza|lasagne|spaghetti bolognese|bami|nasi|salade|bakplaat|soep|quiche|pesto|wraps met|hot dog)\b/i;
+
+export function isWholeIngredientOffer(offer, item) {
+  if (!offer || !item || !matchesRecipeIngredient(offer,item.key)) return false;
+  const name=clean(offer.name);
+  const category=clean(offer.category || offer.unified_category || "");
+  if (NON_INGREDIENT.test(name)||NON_FOOD_BRANDS.test(name)||PREPARED_FOOD.test(name))return false;
+  const isVeg=VEG.some(v=>v.key===item.key);
+  const isProtein=PROTEINS.some(v=>v.key===item.key);
+  if (isVeg) {
+    // Never classify an offering from chips, ready-meals, dairy, personal
+    // care etc. as a fresh vegetable merely because its name has "paprika".
+    if(category && !/(groente|fruit|agf|vers|aardappel|diepvries)/.test(category))return false;
+    if(/\b(?:kip|rund|vlees|vis|filet|kaas|pasta|rijst|bonen|linzen|chips|worst|wraps|pudding|olie|melk)\b/.test(name))return false;
+    if(item.key==="avocado" && /olie|oil|cream|butter/.test(name))return false;
+    if(item.key==="rode paprika" && /paprika[s]?maak|paprika[s]?aus/.test(name))return false;
+  }
+  if(isProtein) {
+    if(category && /(persoonlijk|nonfood|schoonmaak|drank|snack|maaltijd|sauzen)/.test(category))return false;
+    if(/(?:gemarineerd in saus|in room|kant en klaar|gepaneerd|ovenschotel|stoof|burger|schnitzel)/.test(name))return false;
+  }
+  // "kikkererwten en lupine mix" is still a usable bean combination; no
+  // prepared spicy meals, dips, soups or flavour-labelled snack products.
+  if(!isVeg && !isProtein && /\b(?:shower|chips|soup|ready meal)\b/.test(name))return false;
+  return true;
+}
+
 /** Produce true only for actual separate product identities. */
 function bestOffers(offers, retailer, today) {
   const live = (offers || []).filter(o =>
@@ -179,7 +216,7 @@ function bestOffers(offers, retailer, today) {
   );
   const found = new Map();
   for (const item of [...VEG, ...PROTEINS, ...STAPLE_DEALS]) {
-    const candidates = live.filter(o => matchesRecipeIngredient(o, item.key));
+    const candidates = live.filter(o => isWholeIngredientOffer(o, item));
     if (!candidates.length) continue;
     candidates.sort((a,b) =>
       (Number(b.savings)||0)-(Number(a.savings)||0) ||
