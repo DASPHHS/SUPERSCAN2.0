@@ -15,8 +15,10 @@ for(const retailer of RECIPE_RETAILERS) {
   console.log(
     retailer.name.padEnd(15),
     String(live.length).padStart(4),"gevonden productacties,",
-    menu.length,"volledige maaltijden met 2+ acties"
+    menu.length,"maaltijden met minimaal 1 echt actieproduct"
   );
+  const meat=menu.filter(e=>["kip","rund","varken"].includes(e.recipe.diet));
+  console.log("  Vlees/kip-recepten:",meat.length,"(uitsluitend met bevestigde actuele aanbieding)");
   menu.forEach(entry=>{
     const productNames=entry.matches.map(m=>m.offer.name).slice(0,3).join(", ");
     console.log("  •",entry.recipe.title,"|",entry.matches.length,"daadwerkelijke acties |",productNames);
