@@ -59,6 +59,10 @@
             <div><span class="weekly-kicker">KIES JOUW SUPERMARKT</span><strong>Jouw week. Jouw acties.</strong></div>
             <span id="weekly-range" class="weekly-range">Deze actieweek</span>
           </div>
+          <div class="recipe-week-tabs" role="group" aria-label="Kies week voor recepten">
+            <button type="button" data-recipe-week="now" class="is-active" aria-pressed="true">Deze week</button>
+            <button type="button" data-recipe-week="next" aria-pressed="false">Volgende week</button>
+          </div>
           <div class="weekly-picker-controls">
             <label>Supermarktketen
               <select id="recipe-store">
@@ -83,8 +87,10 @@
           <button class="filter-chip" type="button" data-diet="snel" aria-pressed="false">Binnen 30 min</button>
           <label class="recipe-search"><span class="sr-only">Zoek recepten en actie-ingrediënten</span><input id="recipe-search" placeholder="Zoek gerecht of ingrediënt…"><span aria-hidden="true">⌕</span></label>
         </div>
+        <p class="recipe-source-stamp" id="recipe-source-stamp">Brongegevens en actiedatums controleren…</p>
         <div class="weekly-status-row"><p id="weekly-status" role="status" aria-live="polite">We combineren actuele groente-, eiwit- en overige acties tot complete avondmaaltijden…</p><button id="add-week-to-list" type="button" class="outline-button" disabled>+ Voeg alle weekingrediënten toe</button></div>
         <div id="recipes-grid" class="recipes-grid" aria-live="polite"></div>
+        <div class="recipe-source-link"><a href="#aanbiedingen">Bekijk alle actuele aanbiedingen bij deze recepten ↓</a><span>Recepten op basis van ketenacties; geen bevestigde filiaalvoorraad.</span></div>
         <div class="nutrition-note"><span class="nutrition-icon">✳</span><p><strong>Transparant over kortingen:</strong> een getoond actieproduct is daadwerkelijk gevonden in de actuele bron van de gekozen keten. Andere ingrediënten kunnen de normale prijs hebben; er wordt geen fictieve recept- of weekprijs berekend. Actiedata kunnen tijdens de week verlopen en regionale verschillen zijn mogelijk. Bron: <a href="https://www.prijsprofeet.nl" target="_blank" rel="noopener noreferrer">PrijsProfeet ↗</a>. <a href="https://www.voedingscentrum.nl/nl/gezonde-recepten.aspx" target="_blank" rel="noopener noreferrer">Gezonde voedingsrichtlijnen ↗</a>.</p></div>
       </section>
 
@@ -98,12 +104,13 @@
 
       <section id="aanbiedingen" class="content-section">
         <div class="section-header">
-          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> AANVULLEND OP JE WEEKMENU</div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen en bekijk wanneer een actie afloopt.</p></div>
+          <div><div class="eyebrow dark-eyebrow"><span class="eyebrow-line"></span> AANVULLEND OP JE WEEKMENU</div><h2>De beste <span>aanbiedingen.</span></h2><p>Ontdek kortingen, bundels en ledenprijzen, met broninformatie en geldigheidsdatum.</p></div>
           <div class="live-badge"><span class="pulse"></span><span id="deals-updated">Brongegevens laden…</span></div>
         </div>
         <div class="toolbar">
           <label class="filter-search"><span aria-hidden="true">⌕</span><span class="sr-only">Zoek aanbiedingen</span><input id="deals-search" placeholder="Zoek in aanbiedingen…" autocomplete="off"></label>
           <label class="select-wrap"><span class="sr-only">Filter op supermarkt</span><select id="store-filter"><option value="all">Alle supermarkten</option></select></label>
+          <label class="select-wrap"><span class="sr-only">Selecteer soort aanbieding</span><select id="offer-type"><option value="all">Alle soorten acties</option><option value="single">Losse artikelprijs</option><option value="bundle">Bundelaanbiedingen</option><option value="loyalty">Ledenprijs</option></select></label>
           <label class="select-wrap"><span class="sr-only">Sorteer aanbiedingen</span><select id="deals-sort"><option value="discount">Grootste korting</option><option value="price">Laagste prijs</option><option value="expiry">Loopt eerst af</option></select></label>
         </div>
         <div id="deals-grid" class="deals-grid" aria-live="polite"><div class="empty-state"><span>↻</span><strong>Aanbiedingen laden…</strong><p>We controleren de beschikbare prijsgegevens.</p></div></div>
