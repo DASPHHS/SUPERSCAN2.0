@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
@@ -46,6 +46,7 @@ jobs:
           mkdir -p dist
           cp index.html styles.css manifest.webmanifest favicon.svg sw.js dist/
           cp -r src data dist/
+          python -c 'import json; d=json.load(open("dist/data/deals.json")); assert d.get("offers"), "No current offers in deploy artifact"'
           test -s dist/data/deals.json
           test -s dist/data/prices.json
       - name: Configure Pages
