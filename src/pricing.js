@@ -136,7 +136,12 @@ export function normalizeOffer(item) {
     source:item?.product_url||null,
     bundleQty:item?.multi_buy_quantity||null,
     bundlePrice:item?.multi_buy_price||null,
-    loyalty:item?.loyalty_price||null
+    loyalty:item?.loyalty_price||null,
+    unitPrice:Number.isFinite(Number(item?.unit_price))&&Number(item.unit_price)>0?Number(item.unit_price):null,
+    unit:typeof item?.unit==="string"?item.unit:null,
+    channel:item?.channel||null,
+    promoType:item?.promotion_type||null,
+    sourceFeed:item?.promotion_source||null
   };
 }
 export function safeUrl(value) {
