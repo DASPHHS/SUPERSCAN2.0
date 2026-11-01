@@ -1,0 +1,19 @@
+{
+  "name": "SUPERSCAN 2.0",
+  "short_name": "SuperScan",
+  "description": "Nederlandse aanbiedingen, recepten en boodschappenlijst",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#0c1827",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
