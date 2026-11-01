@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {buildActionMeals,isWholeIngredientOffer} from "../src/meal-engine.js";
+import {buildActionMeals,isWholeIngredientOffer,isOfferInPeriod} from "../src/meal-engine.js";
 
 const day="2026-11-02";
 const deal=(id,name,retailer="jumbo",extra={})=>({
@@ -149,4 +149,64 @@ test("single real central offer creates relevant dinner without fake second disc
   assert.ok(plan.length>0);
   assert.ok(plan.every(e=>e.matches.length===1 && e.matches[0].offer.id==="a"));
   assert.ok(plan.some(e=>e.recipe.diet==="vis" && e.recipe.title.includes("aardappeltjes")));
+});
+
+
+test("raw chicken cuts, beef and pork trigger complete offers-based dinners",()=>{
+  const cases=[
+    ["Jumbo Kipdijfilet 500 g","kipdijfilet","kip"],
+    ["Jumbo Kipdrumsticks 1 kg","kipdrumsticks","kip"],
+    ["Jumbo Mager rundergehakt 500 g","rundergehakt","rund"],
+    ["Jumbo Kogelbiefstuk 2 stuks","biefstuk","rund"],
+    ["Jumbo Runderreepjes 350 g","runderreepjes","rund"],
+    ["Jumbo Varkenshaas 400 g","varkenshaas","varken"],
+    ["Jumbo Varkensfiletlapjes 350 g","varkensfiletlapjes","varken"],
+  ];
+  for(const [name,ingredient,diet] of cases){
+    const offers=[deal("meat",name,"jumbo",{category:"vlees-vis"})];
+    const menu=buildActionMeals(offers,"jumbo",day);
+    const dish=menu.find(r=>r.recipe.diet===diet);
+    assert.ok(dish,name+" must trigger an action-based meat recipe");
+    assert.ok(dish.recipe.ingredients.some(([n])=>n===ingredient),name+" must be on shopping list");
+    assert.equal(dish.matches[0].offer.id,"meat");
+    assert.ok(dish.recipe.steps.length>=4);
+    if(diet==="kip")assert.ok(dish.recipe.steps.some(step=>step.includes("75 °C")));
+  }
+});
+test("multiple types of meat can appear in the same week without being suppressed",()=>{
+  const deals=[
+    deal("chicken","Jumbo Kipfilet 500g"),
+    deal("beef","Jumbo Rundergehakt 500g"),
+    deal("pork","Jumbo Varkenshaas 350g"),
+    deal("fish","Jumbo Zalmfilet 2 stuks"),
+    deal("vegetable","Jumbo Broccoli 500g")
+  ];
+  const menu=buildActionMeals(deals,"jumbo",day);
+  const diets=new Set(menu.map(e=>e.recipe.diet));
+  for(const diet of ["kip","rund","varken","vis"])assert.ok(diets.has(diet),diet+" not included");
+  assert.ok(menu.every(e=>e.matches.every(m=>deals.some(d=>d.id===m.offer.id))));
+});
+test("ready meals, vegetarian alternatives and deli meats never count as uncooked meat",()=>{
+  const bad=[
+    ["Vegetarische kipfilet 200g","kipfilet"],
+    ["Gerookte kipfilet broodbeleg","kipfilet"],
+    ["Kipfilet in champignon roomsaus kant en klaar","kipfilet"],
+    ["Rundergehakt vegetarisch 350g","rundergehakt"],
+    ["Biefstuk burger in saus","biefstuk"],
+    ["Varkenshaas schnitzel gepaneerd","varkenshaas"]
+  ];
+  for(const [name,key] of bad)
+    assert.equal(isWholeIngredientOffer({name,category:"vlees-vis"},{key}),false,name);
+});
+test("next-week meal matching considers announced dates, not today's offers",()=>{
+  const thisWeek=deal("now","Jumbo Kipfilet 500g","jumbo",{valid_from:"2026-11-02",valid_until:"2026-11-08"});
+  const nextWeek=deal("next","Jumbo Rundergehakt 500g","jumbo",{status:"upcoming",valid_from:"2026-11-09",valid_until:"2026-11-15"});
+  assert.equal(isOfferInPeriod(thisWeek,"now",day),true);
+  assert.equal(isOfferInPeriod(nextWeek,"now",day),false);
+  assert.equal(isOfferInPeriod(thisWeek,"next",day),false);
+  assert.equal(isOfferInPeriod(nextWeek,"next",day),true);
+  const menu=buildActionMeals([thisWeek,nextWeek],"jumbo",day,7,"next");
+  assert.ok(menu.length>0);
+  assert.ok(menu.every(m=>m.matches.every(x=>x.offer.id==="next")));
+  assert.ok(menu.some(m=>m.recipe.diet==="rund"));
 });
