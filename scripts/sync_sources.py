@@ -191,6 +191,14 @@ def get_offers():
         "komkommer", "eieren", "linzen", "tofu", "avocado", "wortel",
         "kikkererwten", "rijst", "prei", "pompoen",
     )
+    # The API search accepts the normalized category 'groente-fruit'.
+    # Query produce in its real category so paprika chips, soup mixes,
+    # shampoo or prepared meals cannot crowd the first results page.
+    fresh_produce = {
+        "paprika","tomaat","spinazie","courgette","aardappelen",
+        "broccoli","champignons","komkommer","avocado","wortel",
+        "prei","pompoen",
+    }
     seen = set()
     output = []
     query_errors = []
@@ -206,9 +214,11 @@ def get_offers():
                 "promotion_status": "active",
                 "retailer": retailer,
                 "sort_by": "savings_percentage:desc",
-                "page_size": 75 if term == "*" else 20,
+                "page_size": 75 if term == "*" else (60 if term in fresh_produce else 25),
                 "page": 1,
             }
+            if term in fresh_produce:
+                params["category"] = "groente-fruit"
             try:
                 data = fetch_json(API_BASE + "/search?" + urllib.parse.urlencode(params), attempts=2)
                 results, _ = products_in_page(data)
