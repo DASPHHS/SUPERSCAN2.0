@@ -181,72 +181,100 @@ def percentage(item):
 
 
 def get_offers():
+    """Fetch a useful verified shortlist *quickly*, without walking thousands
+    of promotional rows on every GitHub Pages deployment.
+
+    PrijsProfeet documents q=* for browsing all, promotion_status=active
+    and savings_percentage:desc for ranking. Each chain is sampled
+    separately to avoid one chain dominating the homepage.
+    """
+    retailers = (
+        "albert_heijn", "jumbo", "lidl", "aldi", "plus", "dirk",
+        "dekamarkt", "hoogvliet", "vomar", "nettorama", "poiesz",
+        "spar", "ekoplaza", "boons_markt", "gewoon_coop", "mcd",
+    )
     rows = []
     seen = set()
-    total = None
-    page_count = 0
-    for page in range(1, MAX_PAGES + 1):
-        if page > 1:
-            time.sleep(DELAY)
-        url = API_BASE + "/products/promotional/all?" + urllib.parse.urlencode({
-            "page": page, "page_size": PAGE_SIZE,
+    source_errors = []
+    for index, retailer in enumerate(retailers):
+        if index:
+            time.sleep(0.75)
+        query = urllib.parse.urlencode({
+            "q": "*",
+            "promotion_status": "active",
+            "sort_by": "savings_percentage:desc",
+            "retailer": retailer,
+            "page_size": 75,
+            "page": 1,
         })
-        data = fetch_json(url)
-        products, reported_total = products_in_page(data)
-        if reported_total is not None:
-            try:
-                total = int(reported_total)
-            except (TypeError, ValueError):
-                pass
-        page_count += 1
-        for item in products:
-            if not isinstance(item, dict) or not is_running(item):
-                continue
-            name, retailer = item.get("name"), item.get("retailer")
-            if not isinstance(name, str) or not name.strip() or not retailer:
-                continue
-            # Source product IDs can be reused across retailers; keep retailer in key.
-            key = (str(retailer), str(item.get("product_id") or item.get("id") or name))
-            if key in seen:
-                continue
-            seen.add(key)
-            rows.append(item)
-        logging.info("Promotion page %s: %s rows, %s running overall", page, len(products), len(rows))
-        if not products or len(products) < PAGE_SIZE:
-            break
-        if total is not None and page * PAGE_SIZE >= total:
-            break
+        url = API_BASE + "/search?" + query
+        try:
+            data = fetch_json(url, attempts=2)
+            products, _ = products_in_page(data)
+            added = 0
+            for item in products:
+                if not isinstance(item, dict) or not is_running(item):
+                    continue
+                if not item.get("name") or not item.get("retailer"):
+                    continue
+                identity = (str(item["retailer"]), str(item.get("product_id") or item.get("name")))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                rows.append(item)
+                added += 1
+            logging.info("%s: %s verified running offers", retailer, added)
+        except Exception as exc:
+            source_errors.append(f"{retailer}: {exc}")
+            logging.warning("Retailer query failed (%s): %s", retailer, exc)
 
-    # Limit payload size, retain chain coverage, and avoid duplicate products
-    # crowding out other offers on the homepage.
-    by_store = defaultdict(list)
-    for p in rows:
-        by_store[str(p.get("retailer"))].append(p)
-    chosen = []
-    for store, offers in by_store.items():
-        offers.sort(key=lambda p: (percentage(p), float(p["price"])), reverse=True)
-        names = set()
-        for p in offers:
-            product_name = " ".join(p["name"].lower().split())
-            if product_name in names:
-                continue
-            names.add(product_name)
-            chosen.append(p)
-            if len(names) >= RETAILER_LIMIT:
+    # The bulk endpoint is a documented independent fallback. Never invent
+    # offers or copy static historical prices into the current dataset.
+    if not rows:
+        logging.warning("Search returned no current offers; trying promotional endpoint")
+        for page in range(1, 4):
+            url = API_BASE + "/products/promotional/all?" + urllib.parse.urlencode({
+                "page": page, "page_size": PAGE_SIZE,
+            })
+            try:
+                data = fetch_json(url, attempts=2)
+            except Exception as exc:
+                source_errors.append(f"bulk page {page}: {exc}")
                 break
-    slim = []
+            products, _ = products_in_page(data)
+            for item in products:
+                if not isinstance(item, dict) or not is_running(item):
+                    continue
+                if not item.get("name") or not item.get("retailer"):
+                    continue
+                identity = (str(item["retailer"]), str(item.get("product_id") or item.get("name")))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                rows.append(item)
+            if len(products) < PAGE_SIZE:
+                break
+            time.sleep(DELAY)
+
+    if not rows:
+        raise RuntimeError("No current PrijsProfeet offers retrieved; errors=" + repr(source_errors[:4]))
+
+    chosen = sorted(rows, key=lambda p: (-percentage(p), float(p["price"])))
     fields = (
         "product_id", "id", "name", "retailer", "price", "original_price",
         "savings_percentage", "promotion_status", "status", "valid_from", "valid_until",
         "quantity", "category", "unified_category", "image_url", "product_url",
         "multi_buy_quantity", "multi_buy_price", "loyalty_price", "promotional_keywords",
     )
-    for p in chosen:
-        slim.append({k: p[k] for k in fields if k in p})
+    slim = [{k: p[k] for k in fields if k in p} for p in chosen]
     save("deals.json", {
-        "source": "PrijsProfeet", "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "offers": slim, "sourceCount": len(rows), "pageCount": page_count,
-        "partial": page_count >= MAX_PAGES,
+        "source": "PrijsProfeet",
+        "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "offers": slim,
+        "sourceCount": len(rows),
+        "partial": True,
+        "sampling": "top 75 live offers per retailer",
+        "sourceErrors": len(source_errors),
     })
     return len(slim), len(rows)
 
@@ -260,8 +288,15 @@ def main():
             completed += 1
         except Exception:
             logging.exception("Failed syncing %s", name)
-    if not completed:
-        raise SystemExit("Both data providers failed: do not deploy a data-less build")
+    if not (OUT / "deals.json").exists():
+        raise SystemExit("No deals.json available")
+    try:
+        with (OUT / "deals.json").open(encoding="utf-8") as stream:
+            count = len(json.load(stream).get("offers", []))
+    except (OSError, ValueError, TypeError):
+        count = 0
+    if count == 0:
+        raise SystemExit("No confirmed current offers; do not deploy a misleading empty deals page")
     logging.info("Completed %d / 2 data providers", completed)
 
 
