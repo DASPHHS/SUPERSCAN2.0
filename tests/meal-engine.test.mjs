@@ -13,16 +13,16 @@ test("empty or unrelated actions produce zero recipes, not fillers",()=>{
   assert.deepEqual(buildActionMeals([deal("x","Jumbo chocopasta"),deal("y","Jumbo cola")],"jumbo",day),[]);
   assert.deepEqual(buildActionMeals([deal("x","Jumbo broccoli"),deal("y","Jumbo rode paprika")],"aldi",day),[]);
 });
-test("at least two different real offers per generated complete dinner",()=>{
+test("multiple promotions take precedence and a single offer is never double-counted",()=>{
   const offers=[deal("a","Jumbo broccoli 500 gram"),deal("b","Jumbo courgette 1 stuk")];
   const menu=buildActionMeals(offers,"jumbo",day);
   assert.ok(menu.length>=1);
+  assert.equal(menu[0].matches.length,2);
   for(const entry of menu){
-    assert.equal(entry.matches.length,2);
-    assert.equal(new Set(entry.matches.map(m=>m.offer.id)).size,2);
+    assert.ok(entry.matches.length>=1);
+    assert.equal(new Set(entry.matches.map(m=>m.offer.id)).size,entry.matches.length);
     assert.ok(entry.recipe.ingredients.length>=4);
     assert.ok(entry.recipe.steps.length>=4);
-    assert.ok(entry.recipe.title.includes("broccoli") && entry.recipe.title.includes("courgette"));
     assert.ok(entry.matches.every(m=>m.offer.retailer==="jumbo"));
   }
 });
@@ -33,16 +33,19 @@ test("recipes are genuinely tailored: swap promotional ingredients, change meal 
   assert.notDeepEqual(a[0].recipe.ingredients.slice(0,2),b[0].recipe.ingredients.slice(0,2));
 });
 test("expired, future, missing, off-store deals never count",()=>{
-  assert.deepEqual(buildActionMeals([
+  const menu=buildActionMeals([
     deal("a","Jumbo broccoli"),
     deal("b","Jumbo courgette","jumbo",{status:"upcoming"}),
     deal("c","Jumbo spinazie","lidl"),
     deal("d","Jumbo rode paprika","jumbo",{valid_until:"2026-11-01"})
-  ],"jumbo",day),[]);
+  ],"jumbo",day);
+  assert.ok(menu.length>0);
+  assert.ok(menu.every(e=>e.matches.every(m=>m.offer.id==="a")));
 });
-test("one offer matching two aliases cannot trigger a recipe by itself",()=>{
+test("one offer matching two aliases is counted once, not twice",()=>{
   const offers=[deal("same","Jumbo paprika mix rode gele paprika")];
-  assert.deepEqual(buildActionMeals(offers,"jumbo",day),[]);
+  const menu=buildActionMeals(offers,"jumbo",day);
+  assert.ok(menu.every(e=>e.matches.length===1));
 });
 test("does not match ready meals, soup or shampoo as vegetables",()=>{
   const offers=[
@@ -106,7 +109,12 @@ test("real-world grocery provider false-positive titles are never cooking ingred
     ["Lay's Wokkels Paprika","rode paprika"],
     ["Maggi Dagschotel broccoli kaas","broccoli"],
     ["Lu Tuc paprika","rode paprika"],
-    ["Bieze Rauwkost komkommer","komkommer"]
+    ["Bieze Rauwkost komkommer","komkommer"],
+    ["AH Vers geperste smoothie wortel mango","wortel"],
+    ["AH Bakaardappeltjes paprika en knoflook","rode paprika"],
+    ["AH 75% Groentesmoothie spinazie komkommer","komkommer"],
+    ["Jumbo Gevulde Eieren Kerrie 4 Stuks","eieren"],
+    ["Aviko Wavy blends paprika","rode paprika"]
   ];
   for(const [name,key] of bad){
     assert.equal(isWholeIngredientOffer({name,category:""}, {key}),false,name);
@@ -134,4 +142,11 @@ test("ready foods cannot create false two-offer recipes",()=>{
     deal("e","Vivera Vegetarische Spinazie Kaas Filet")
   ];
   assert.deepEqual(buildActionMeals(bad,"jumbo",day),[]);
+});
+
+test("single real central offer creates relevant dinner without fake second discount",()=>{
+  const plan=buildActionMeals([deal("a","Lidl Verse zalmfilet op huid","lidl")],"lidl",day);
+  assert.ok(plan.length>0);
+  assert.ok(plan.every(e=>e.matches.length===1 && e.matches[0].offer.id==="a"));
+  assert.ok(plan.some(e=>e.recipe.diet==="vis" && e.recipe.title.includes("aardappeltjes")));
 });

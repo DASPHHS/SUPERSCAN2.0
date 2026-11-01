@@ -178,8 +178,8 @@ const ROLES = Object.freeze({
  * Restrict vegetables to produce-oriented categories when classified; a
  * product with no category must still pass the restrictive title checks.
  */
-const NON_INGREDIENT = /(?:soep|schotel|pastasaus|sausmix|kruiden|specerijen|poeder|chips|wokkels|crackers|snack|snoep|lotion|shower|douche|bodywash|body wash|shampoo|conditioner|verzorging|babyvoeding|babyhapje|witvis rijst|roerbak sensatie|bakplaat mix|dagschotel|maaltijd|falafel|rundervink|schnitzel|burger|roomkaas|pasta mix|rauwkost|smaak|aroma|extract|ketchup|dressing|drank|limonade|thee|sap|chips|crisp|mayo)/i;
-const NON_FOOD_BRANDS = /\b(?:nivea|dove|doritos|lays|lay s|lu tuc|knorr|maggi|honig|unox|olvarit|vivera|iglo|pringles|cheetos|cheez|loreal|l oreal)\b/i;
+const NON_INGREDIENT = /(?:soep|schotel|pastasaus|sausmix|kruiden|specerijen|poeder|chips|wokkels|crackers|snack|snoep|lotion|shower|douche|bodywash|body wash|shampoo|conditioner|verzorging|babyvoeding|babyhapje|witvis rijst|roerbak sensatie|bakplaat mix|dagschotel|maaltijd|falafel|rundervink|schnitzel|burger|roomkaas|pasta mix|rauwkost|smaak|aroma|extract|ketchup|dressing|drank|limonade|thee|sap|chips|crisp|mayo|smoothie|groentesmoothie|geperst|bakaardappeltjes|aardappeltjes|wavy|blends|gevulde eieren|gevuld ei|gekookte eieren)/i;
+const NON_FOOD_BRANDS = /\b(?:nivea|dove|doritos|lays|lay s|lu tuc|aviko|knorr|maggi|honig|unox|olvarit|vivera|iglo|pringles|cheetos|cheez|loreal|l oreal)\b/i;
 const PREPARED_FOOD = /\b(?:pure|pulled|aardappel[\s-]?mix|kip[\s-]?mix|tortilla[\s-]?mix|pizza|lasagne|spaghetti bolognese|bami|nasi|salade|bakplaat|soep|quiche|pesto|wraps met|hot dog)\b/i;
 
 export function isWholeIngredientOffer(offer, item) {
@@ -264,7 +264,7 @@ function makeProteinDish(protein,veg,found) {
     recipe:{
       id:"actief-protein-"+clean(protein.key)+"-"+clean(veg.key),
       title:(fish?"Ovenvis":"Kip uit de oven")+" met "+veg.label+" en aardappeltjes",
-      description:"Het eiwit én de groente zijn aantoonbaar in de aanbieding.",
+      description:v?"Het eiwit én de groente zijn aantoonbaar in de aanbieding.":"Deze complete maaltijd is samengesteld rond een echt afgeprijsd eiwitproduct.",
       category:fish?"Vis uit de oven":"Ovenkip",diet:fish?"vis":"kip",
       vegan:false,minutes:fish?35:45,emoji:fish?"🐟":"🍗",tone:fish?"tone-blue":"tone-orange",servings:2,
       ingredients:[[protein.key,protein.amount,protein.unit],[veg.key,Math.max(350,veg.amount),veg.unit],
@@ -279,9 +279,9 @@ function makeProteinDish(protein,veg,found) {
       ],
       allergens:fish?"Vis.":"Controleer de productetiketten."
     },
-    matches:[{ingredient:protein.key,offer:p,major:true},{ingredient:veg.key,offer:v,major:true}],
-    main:2,
-    score:240+(Number(p.savings)||0)+(Number(v.savings)||0),
+    matches:[{ingredient:protein.key,offer:p,major:true},...(v?[{ingredient:veg.key,offer:v,major:true}]:[])],
+    main:v?2:1,
+    score:(v?240:90)+(Number(p.savings)||0)+(Number(v?.savings)||0),
     method:"protein",pair:[protein.key,veg.key].sort().join("|")
   };
 }
@@ -306,6 +306,28 @@ function makeStapleDish(format,a,b,staple,found) {
     score:175+(Number(vegOffer.savings)||0)+(Number(stapleOffer.savings)||0),
     method:format.id,
     pair:[a.key,staple.key].sort().join("|")
+  };
+}
+
+function makeSingleSourceDish(format,a,b,found,sourceKey) {
+  const offer=found.get(sourceKey);
+  const advertised=sourceKey===a.key?a.label:sourceKey;
+  return {
+    recipe:{
+      id:"actief-"+format.id+"-"+clean(sourceKey).replaceAll(" ","-")+"-solo",
+      title:format.prefix+" "+humanJoin(a.label,b.label),
+      description:"Samengesteld vanuit de echte aanbieding voor "+advertised+
+        ". Andere ingrediënten zijn aanvullingen tegen de normale winkelprijs.",
+      category:format.label,diet:format.diet,vegan:format.vegan,
+      minutes:format.minutes,emoji:format.emoji,tone:format.tone,servings:2,
+      ingredients:[[a.key,a.amount,a.unit],[b.key,b.amount,b.unit],...format.base.map(x=>[...x])],
+      steps:format.steps(a.label,b.label),allergens:format.allergens
+    },
+    matches:[{ingredient:sourceKey,offer,major:true}],
+    main:1,
+    score:55+(Number(offer.savings)||0),
+    method:format.id,
+    pair:sourceKey
   };
 }
 
@@ -346,6 +368,25 @@ export function buildActionMeals(offers, retailer, today=todayNL(), limit=7) {
     for(const v of VEG.filter(x=>x.roles.includes("oven") && found.has(x.key))){
       if(found.get(p.key).id===found.get(v.key).id)continue;
       candidates.push(makeProteinDish(p,v,found));
+    }
+    // A genuinely discounted fish/chicken remains a valid recipe starting
+    // point even when no fresh vegetable is reduced that week.
+    const regularVeg=VEG.find(x=>x.key==="broccoli" && !found.has(x.key)) ||
+      VEG.find(x=>x.key==="courgette" && !found.has(x.key));
+    if(regularVeg)candidates.push(makeProteinDish(p,regularVeg,found));
+  }
+  for(const format of FORMATS){
+    const allowed=VEG.filter(v=>ROLES[format.id].includes(v.key));
+    for(const a of allowed.filter(v=>found.has(v.key))){
+      const regular=allowed.find(v=>v.key!==a.key && !found.has(v.key));
+      if(regular)candidates.push(makeSingleSourceDish(format,a,regular,found,a.key));
+    }
+    // Discounted grains, legumes and eggs can also start a complete meal.
+    const normalVeg=allowed.filter(v=>!found.has(v.key));
+    if(normalVeg.length>=2){
+      for(const staple of STAPLE_DEALS.filter(st=>st.formats.includes(format.id)&&found.has(st.key))){
+        candidates.push(makeSingleSourceDish(format,normalVeg[0],normalVeg[1],found,staple.key));
+      }
     }
   }
   candidates.sort((a,b)=>b.score-a.score || a.recipe.title.localeCompare(b.recipe.title,"nl"));

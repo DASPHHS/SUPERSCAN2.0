@@ -12,7 +12,7 @@ test("user lands on recipes before deals or product comparison",()=>{
   const offers=html.indexOf('id="aanbiedingen"');
   const prices=html.indexOf('id="vergelijken"');
   assert.ok(hero>0 && recipes>hero && offers>recipes && prices>offers);
-  assert.ok(html.includes("2+ bevestigde actieproducten per maaltijd"));
+  assert.ok(html.includes("Actie als basis, geen willekeur"));
 });
 test("all authored static DOM ids unique",()=>{
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
