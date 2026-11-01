@@ -1,0 +1,33 @@
+name: Validate SuperScan source
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ["feature/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/pricing.js
+          node --check src/recipes.js
+          node --check sw.js
+      - name: Run unit tests
+        run: |
+          npm test
+          python -m unittest discover -s tests -p 'test_*.py'
